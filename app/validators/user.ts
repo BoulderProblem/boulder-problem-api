@@ -20,7 +20,6 @@ export const createUserValidator = vine.compile(
     birth_date: vine.date({
       formats: ['YYYY/MM/DD', 'x'],
     }),
-    role_id: vine.number(),
     gender_id: vine.number(),
   })
 )
@@ -37,7 +36,6 @@ export const updateUserValidator = vine.compile(
         formats: ['YYYY/MM/DD', 'x'],
       })
       .optional(),
-    role_id: vine.number().optional(),
     gender_id: vine.number().optional(),
   })
 )

@@ -3,7 +3,6 @@
 import User from '#models/user'
 import { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
-import { createUserValidator } from '#validators/auth'
 
 export default class AuthController {
   async login({ request }: HttpContext) {
@@ -22,14 +21,5 @@ export default class AuthController {
     return {
       revoked: true,
     }
-  }
-  async register({ request }: HttpContext) {
-    let payload = await request.validateUsing(createUserValidator)
-
-    const user = await User.create(payload)
-
-    const token = await User.accessTokens.create(user)
-
-    return { user, token }
   }
 }

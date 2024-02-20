@@ -5,9 +5,21 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.uuid('id').primary().defaultTo(this.raw('uuid_generate_v4()'))
-      table.uuid('user_follower_id').unsigned().references('id').inTable('users').notNullable()
-      table.uuid('user_following_id').unsigned().references('id').inTable('users').notNullable()
+      table.uuid('id').primary().defaultTo(this.db.rawQuery('gen_random_uuid()').knexQuery)
+      table
+        .uuid('user_follower_id')
+        .unsigned()
+        .references('id')
+        .inTable('users')
+        .onDelete('CASCADE')
+        .notNullable()
+      table
+        .uuid('user_following_id')
+        .unsigned()
+        .references('id')
+        .inTable('users')
+        .onDelete('CASCADE')
+        .notNullable()
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

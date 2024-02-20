@@ -3,12 +3,12 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import Follow from '#models/follow'
+import { DateTime } from 'luxon'
 
 export default class UsersController {
   /**
-   *
-   * @param param0
-   * @returns
+   * @register
+   * @summary create user
    */
   async register({ request }: HttpContext) {
     let payload = await request.validateUsing(createUserValidator)
@@ -21,42 +21,47 @@ export default class UsersController {
   }
 
   /**
-   *
-   * @param param0
-   * @returns
+   * @getUsers
+   * @summary getAll users
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async GetUsers({ auth }: HttpContext) {
+  async getUsers({ auth }: HttpContext) {
     assert(auth.user, 'kindly login')
     return await User.query()
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
   }
   /**
-   *
-   * @param param0 id
-   * @returns user modified
+   * @updateUserId
+   * @summary update user
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
   async updateUserId({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(updateUserValidator)
     let user = await User.findOrFail(request.params().id)
-    await user.merge(payload).save()
+    await user.merge({ ...payload, ...{ updatedAt: DateTime.local() } }).save()
 
     return user
   }
 
   /**
-   *
-   * @param param0
-   * @returns
+   * @getUserId
+   * @summary get specific user
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async GetUserId({ request }: HttpContext) {
+  async getUserId({ request }: HttpContext) {
     return await User.query()
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
       .where('id', request.params().id)
   }
 
+  /**
+   * @followUser
+   * @summary follow or unfollow user
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
   async followUser({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_following_id = request.params().id

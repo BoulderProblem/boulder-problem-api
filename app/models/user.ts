@@ -2,34 +2,40 @@ import { DateTime } from 'luxon'
 import { withAuthFinder } from '@adonisjs/auth'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
-import { BaseModel, beforeSave, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import Follow from './follow.js'
-import Like from './like.js'
+import { Opaque } from '@adonisjs/core/types/helpers'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
   passwordColumnName: 'password',
 })
 
+export type userId = Opaque<'userId', string>
+
 export default class User extends compose(BaseModel, AuthFinder) {
   @column({ isPrimary: true })
-  declare id: string
+  declare id: userId
 
   @column()
+  // @example(Alexandre)
   declare firstname: string
 
   @column()
+  // @example(Chabane)
   declare lastname: string
 
   @column()
+  // @example(johndoe@example.com)
   declare email: string
 
   @column({ serializeAs: null })
   declare password: string
 
   @column()
+  // @example(28-06-1995)
   declare birth_date: Date
 
   @column()
@@ -46,9 +52,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => Follow, {
     foreignKey: 'user_following_id',
-    onQuery(query) {
-      query.count('*').as('follower')
-    },
+    serializeAs: null,
   })
   declare followers: HasMany<typeof Follow>
 

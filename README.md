@@ -46,7 +46,7 @@ sudo docker build -t back .
 ```
 
 ```bash
-sudo docker run -ti -p 3333:3333 --name back back
+sudo docker compose up
 ```
 
 ## URL

@@ -6,7 +6,10 @@ import vine from '@vinejs/vine'
 export const createPostValidator = vine.compile(
   vine.object({
     title: vine.string(),
-    image: vine.string(),
+    image: vine.file({
+      size: '2mb',
+      extnames: ['jpg', 'png'],
+    }),
     text: vine.string(),
   })
 )
@@ -17,7 +20,12 @@ export const createPostValidator = vine.compile(
 export const updatePostValidator = vine.compile(
   vine.object({
     title: vine.string().optional(),
-    image: vine.string().optional(),
     text: vine.string().optional(),
+  })
+)
+
+export const createCommentValidator = vine.compile(
+  vine.object({
+    text: vine.string(),
   })
 )

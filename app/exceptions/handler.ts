@@ -15,8 +15,6 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: HttpError, ctx: HttpContext) {
-    console.log(error)
-
     if (error instanceof errors.E_VALIDATION_ERROR) {
     } else if (error.code === 'E_ROUTE_NOT_FOUND') {
       return ctx.response.status(error.status).send("la route demandée n'existe pas")

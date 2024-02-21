@@ -11,6 +11,7 @@ import fs from 'fs'
 import { middleware } from './kernel.js'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
+import mail from '@adonisjs/mail/services/main'
 
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
@@ -75,6 +76,14 @@ router
   .use([middleware.auth(), middleware.role(['USER'])])
 
 router.get('/image/:name', async ({ request, response }) => {
+  // await mail.send((message) => {
+  //   message
+  //     .to('alexandrechabane72@gmail.com')
+  //     .from('boulder_problem@chabs.fr')
+  //     .subject('Verify your email address')
+  //     .htmlView('emails/email_1', { title: 'Boulder Problem' })
+  // })
+
   const image = fs.createReadStream('./files/user_image/' + request.params().name)
   response.stream(image)
 })

@@ -1,5 +1,7 @@
 import app from '@adonisjs/core/services/app'
 import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
+import { errors } from '@vinejs/vine'
+import { HttpError } from '@adonisjs/core/types/http'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -12,7 +14,16 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * The method is used for handling errors and returning
    * response to the client
    */
-  async handle(error: unknown, ctx: HttpContext) {
+  async handle(error: HttpError, ctx: HttpContext) {
+    console.log(error)
+
+    if (error instanceof errors.E_VALIDATION_ERROR) {
+    } else if (error.code === 'E_ROUTE_NOT_FOUND') {
+      return ctx.response.status(error.status).send("la route demandée n'existe pas")
+    } else if (error.code === '22P02') {
+      return ctx.response.status(error.status).send('Requête invalide')
+    }
+
     return super.handle(error, ctx)
   }
 

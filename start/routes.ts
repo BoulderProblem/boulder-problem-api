@@ -12,6 +12,7 @@ import { middleware } from './kernel.js'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
 import mail from '@adonisjs/mail/services/main'
+import { HttpContext } from '@adonisjs/core/http'
 
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
@@ -68,14 +69,14 @@ router
   .post('/posts/:id/like', [PostsController, 'likePost'])
   .use([middleware.auth(), middleware.role(['USER'])])
 router
-  .get('/posts/:id/image', [PostsController, 'getImage'])
+  .get('/posts/:id/image/:id_image', [PostsController, 'getImage'])
   .use([middleware.auth(), middleware.role(['USER'])])
 
 router
   .post('/posts/:id/comment', [PostsController, 'createComment'])
   .use([middleware.auth(), middleware.role(['USER'])])
 
-router.get('/image/:name', async ({ request, response }) => {
+router.get('/image/:name', async ({ request, response }: HttpContext) => {
   // await mail.send((message) => {
   //   message
   //     .to('alexandrechabane72@gmail.com')

@@ -38,20 +38,22 @@ export default class PostsController {
   async addPosts({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createPostValidator)
-
-    // create unique image name
-    let imageName = `${cuid()}.${payload.image.extname}`
-
-    // save image
-    await payload.image.move(app.makePath('uploads/posts'), {
-      name: imageName,
+    let imageids: string[] = []
+    payload.images.forEach((image) => {
+      // create unique image name
+      let imageName = `${cuid()}.${image.extname}`
+      imageids.push(imageName)
+      // save image
+      image.move(app.makePath('uploads/posts'), {
+        name: imageName,
+      })
     })
 
     // save post
     const post = await Post.create({
       title: payload.title,
       text: payload.text,
-      image: imageName,
+      image: imageids,
       user_id: auth.user.id,
     })
 
@@ -80,7 +82,7 @@ export default class PostsController {
    */
   async getImage({ request, response }: HttpContext) {
     let post = await Post.findOrFail(request.params().id)
-    const image = fs.createReadStream('./uploads/posts/' + post.image)
+    const image = fs.createReadStream('./uploads/posts/' + request.params().id_image)
     response.stream(image)
   }
 

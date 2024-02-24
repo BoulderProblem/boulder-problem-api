@@ -16,7 +16,7 @@ export default class Post extends BaseModel {
   declare title: string
 
   @column()
-  declare image: string
+  declare image: string[]
 
   @column()
   declare text: string

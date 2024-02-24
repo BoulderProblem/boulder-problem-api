@@ -14,8 +14,8 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
         .notNullable()
       table.string('title')
-      table.string('image')
-      table.string('text')
+      table.specificType('image', 'varchar[]')
+      table.specificType('text', 'text')
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

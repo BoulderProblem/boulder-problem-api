@@ -28,6 +28,9 @@ export default class Post extends BaseModel {
   declare likes_count: number
 
   @column()
+  declare comments_count: number
+
+  @column()
   declare is_like: number
 
   @hasMany(() => Like, {

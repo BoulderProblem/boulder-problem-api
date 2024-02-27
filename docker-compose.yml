@@ -4,12 +4,15 @@ services:
   postgres:
     container_name: postgres
     image: postgres:15
+    environment:
+      POSTGRES_USER: ${DB_USER_ADMIN}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_ADMIN}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
     volumes:
       - postgres_volume:/var/lib/postgresql/data
-      - ./dockerConfig/postgres-dev-init.sql:/docker-entrypoint-initdb.d/init.sql # will setup dev database adonis_app for us
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      - ./dockerConfig/init.sh:/docker-entrypoint-initdb.d/init.sh # will setup dev database adonis_app for us
     ports:
       - ${DB_PORT}:${DB_PORT}
 
@@ -30,7 +33,7 @@ services:
       - DB_HOST=host.docker.internal
     volumes:
       - ./:/home/node/app
-    command: dumb-init node ace serve --watch
+    command: ash -c "node ace migration:run && dumb-init node ace serve --watch"
 
 volumes:
   postgres_volume:

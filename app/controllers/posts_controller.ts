@@ -20,12 +20,10 @@ export default class PostsController {
     let user_id = auth.user.id
 
     return await Post.query()
-      .preload('comments', (comments) => {
-        comments.preload('user')
-      })
       .preload('user')
       .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
+      .withCount('comments', (query) => query.count('*').as('comments_count'))
       .where('user_id', user_id)
   }
 

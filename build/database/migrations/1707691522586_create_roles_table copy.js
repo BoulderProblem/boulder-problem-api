@@ -1,0 +1,35 @@
+import { BaseSchema } from '@adonisjs/lucid/schema';
+import Roles from '../../app/enums/roles.js';
+export default class extends BaseSchema {
+    tableName = 'roles';
+    async up() {
+        this.schema.createTable(this.tableName, (table) => {
+            table.increments('id');
+            table.string('name', 50).notNullable();
+        });
+        this.defer(async (db) => {
+            await db.table(this.tableName).multiInsert([
+                {
+                    id: Roles.USER,
+                    name: 'User',
+                },
+                {
+                    id: Roles.AGENT,
+                    name: 'Agent',
+                },
+                {
+                    id: Roles.PHONEUR,
+                    name: 'Phoneur',
+                },
+                {
+                    id: Roles.ADMIN,
+                    name: 'Admin',
+                },
+            ]);
+        });
+    }
+    async down() {
+        this.schema.dropTable(this.tableName);
+    }
+}
+//# sourceMappingURL=1707691522586_create_roles_table%20copy.js.map

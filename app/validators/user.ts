@@ -9,7 +9,10 @@ export const createUserValidator = vine.compile(
       .string()
       .trim()
       .email()
-      .normalizeEmail()
+      .normalizeEmail({
+        all_lowercase: true,
+        gmail_remove_dots: false,
+      })
       .unique(async (db, value) => {
         const user = await db.from('users').where('email', value).first()
         return !user

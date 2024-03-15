@@ -17,7 +17,7 @@ export default class UsersController {
 
     const token = await User.accessTokens.create(user)
 
-    return { user, token }
+    return token
   }
 
   /**
@@ -30,6 +30,19 @@ export default class UsersController {
     return await User.query()
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
+  }
+
+  /**
+   * @getUser
+   * @summary get current user
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async getUser({ auth }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    return await User.query()
+      .withCount('followers', (query) => query.count('*').as('follower'))
+      .withCount('followings', (query) => query.count('*').as('following'))
+      .where('id', auth.user.id)
   }
   /**
    * @updateUserId

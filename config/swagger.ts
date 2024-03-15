@@ -10,7 +10,7 @@ export default {
   version: '1.0.0',
   tagIndex: 1,
   snakeCase: true,
-  ignore: ['/swagger', '/docs', '/'],
+  ignore: ['/swagger', '/docs', '/', '/places/load'],
   preferredPutPatch: 'PUT', // if PUT/PATCH are provided for the same route, prefer PUT
   common: {
     parameters: {}, // OpenAPI conform parameters that are commonly used

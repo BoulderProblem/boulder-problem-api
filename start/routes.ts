@@ -17,6 +17,7 @@ import { HttpContext } from '@adonisjs/core/http'
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
 const PostsController = () => import('#controllers/posts_controller')
+const PlacesController = () => import('#controllers/places_controller')
 
 // returns swagger in YAML
 router.get('/swagger', async () => {
@@ -39,6 +40,9 @@ router.get('/logout', [AuthController, 'logout']).use(middleware.auth())
 
 router
   .get('/users', [UsersController, 'getUsers'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+router
+  .get('/user', [UsersController, 'getUser'])
   .use([middleware.auth(), middleware.role(['USER'])])
 router
   .patch('/users/:id', [UsersController, 'updateUserId'])
@@ -74,6 +78,14 @@ router
 
 router
   .post('/posts/:id/comment', [PostsController, 'createComment'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+
+router
+  .get('/places', [PlacesController, 'places'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+
+router
+  .get('/places/load', [PlacesController, 'load'])
   .use([middleware.auth(), middleware.role(['USER'])])
 
 router.get('/image/:name', async ({ request, response }: HttpContext) => {

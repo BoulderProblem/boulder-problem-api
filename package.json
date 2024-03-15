@@ -62,9 +62,12 @@
     "better-sqlite3": "^9.4.1",
     "edge-iconify": "^2.0.1",
     "edge.js": "^6.0.1",
+    "knex-postgis": "^0.14.3",
     "luxon": "^3.4.4",
+    "node-fetch": "^3.3.2",
     "pg": "^8.11.3",
-    "reflect-metadata": "^0.2.1"
+    "reflect-metadata": "^0.2.1",
+    "xml2js": "^0.6.2"
   },
   "eslintConfig": {
     "extends": "@adonisjs/eslint-config/app"

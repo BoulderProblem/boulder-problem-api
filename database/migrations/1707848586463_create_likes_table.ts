@@ -14,7 +14,6 @@ export default class extends BaseSchema {
         .inTable('posts')
         .onDelete('CASCADE')
         .notNullable()
-
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

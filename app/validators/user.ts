@@ -8,6 +8,7 @@ export const createUserValidator = vine.compile(
     email: vine
       .string()
       .trim()
+      .toLowerCase()
       .email()
       .normalizeEmail({
         all_lowercase: true,
@@ -40,5 +41,12 @@ export const updateUserValidator = vine.compile(
       })
       .optional(),
     gender_id: vine.number().optional(),
+    avatar: vine
+      .file({
+        size: '2mb',
+        extnames: ['jpg', 'png'],
+      })
+      .optional(),
+    bio: vine.string().optional(),
   })
 )

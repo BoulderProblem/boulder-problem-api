@@ -8,6 +8,7 @@ export default class extends BaseSchema {
       table.uuid('id').primary().defaultTo(this.db.rawQuery('gen_random_uuid()').knexQuery)
       table.point('coordinate').notNullable()
       table.geometry('geocoordinate').notNullable()
+      table.specificType('plan', 'varchar[]')
       table.string('osm_id')
       table.boolean('sport_center')
       table.string('name')

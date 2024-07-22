@@ -37,7 +37,7 @@ export default class PostsController {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createPostValidator)
     let imageids: string[] = []
-    payload.images.forEach((image) => {
+    for (const image of payload.images) {
       // create unique image name
       let imageName = `${cuid()}.${image.extname}`
       imageids.push(imageName)
@@ -45,7 +45,7 @@ export default class PostsController {
       image.move(app.makePath('uploads/posts'), {
         name: imageName,
       })
-    })
+    }
 
     // save post
     const post = await Post.create({
@@ -61,7 +61,7 @@ export default class PostsController {
   /**
    * @addPosts
    * @summary add post
-   * @requestBody {"foo": "bar"}
+   * @requestBody {"title": "title", "text": "coucou"}
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
   async updatePosts({ request }: HttpContext) {
@@ -77,11 +77,17 @@ export default class PostsController {
    * @getImage
    * @summary get post image
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   * @responseBody 401 - Wrong image name
    */
   async getImage({ request, response }: HttpContext) {
     let post = await Post.findOrFail(request.params().id)
-    const image = fs.createReadStream('./uploads/posts/' + request.params().id_image)
-    response.stream(image)
+    if (post.image.includes(request.params().id_image)) {
+      const image = fs.createReadStream('uploads/posts/' + request.params().id_image)
+      response.stream(image)
+    } else {
+      response.status(422).send('Wrong image name')
+      return
+    }
   }
 
   /**
@@ -105,11 +111,16 @@ export default class PostsController {
    * @summary delete specific post
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async deletePostId({ request }: HttpContext) {
+  async deletePostId({ auth, request, response }: HttpContext) {
+    assert(auth.user, 'kindly login')
     const post = await Post.findOrFail(request.params().id)
-
-    await post.delete()
-    return { success: true }
+    if (auth.user.id === post.user_id) {
+      await post.delete()
+      return { success: true }
+    } else {
+      response.status(401).send('Permission denied')
+      return
+    }
   }
 
   /**
@@ -126,7 +137,6 @@ export default class PostsController {
     await Post.findOrFail(post_id)
 
     let like = await Like.query().where('post_id', post_id).andWhere('user_id', user_id)
-    console.log(like.length)
 
     if (like.length === 0) {
       // create like

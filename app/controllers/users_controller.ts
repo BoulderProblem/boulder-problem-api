@@ -3,12 +3,17 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import Follow from '#models/follow'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
 import { DateTime } from 'luxon'
+import fs from 'fs'
 
 export default class UsersController {
   /**
    * @register
    * @summary create user
+   * @requestBody {"email": "test@test.fr", "password": "test", "firstname": "Alexandre", "lastname": "Chabane", "birth_date": "1995/06/28", "gender_id": "1"}
+   * @responseBody 200 - {"token": "oat_MTk.cVNCck0yZDEzRnVwc0p4MHZFaDhUTEVGOU5feUIyR0pERS04MUw0UTM5MjQ4NjI0Nzk"}
    */
   async register({ request }: HttpContext) {
     let payload = await request.validateUsing(createUserValidator)
@@ -53,7 +58,18 @@ export default class UsersController {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(updateUserValidator)
     let user = await User.findOrFail(request.params().id)
-    await user.merge({ ...payload, ...{ updatedAt: DateTime.local() } }).save()
+
+    let avatar = user.avatar
+    if (payload.avatar) {
+      // create unique image name
+      avatar = `${cuid()}.${payload.avatar.extname}`
+      // save image
+      payload.avatar.move(app.makePath('uploads/users'), {
+        name: avatar,
+      })
+    }
+
+    await user.merge({ ...payload, ...{ avatar }, ...{ updatedAt: DateTime.local() } }).save()
 
     return user
   }
@@ -68,6 +84,23 @@ export default class UsersController {
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
       .where('id', request.params().id)
+  }
+
+  /**
+   * @getAvatar
+   * @summary get user image
+   * @responseBody 200 - image 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async getAvatar({ request, response }: HttpContext) {
+    let user = await User.findOrFail(request.params().id)
+    if (user.avatar === request.params().id_avatar) {
+      const image = fs.createReadStream('./uploads/users/' + request.params().id_avatar)
+
+      response.stream(image)
+    } else {
+      response.status(422).send("nom de l'avatar incorrect")
+      return
+    }
   }
 
   /**
@@ -86,7 +119,6 @@ export default class UsersController {
     let follow = await Follow.query()
       .where('user_follower_id', user_follower_id)
       .andWhere('user_following_id', user_following_id)
-    console.log(follow.length)
 
     if (follow.length === 0) {
       // create like

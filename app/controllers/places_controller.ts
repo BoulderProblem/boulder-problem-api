@@ -2,14 +2,128 @@
 
 import Place from '#models/place'
 import { HttpContext } from '@adonisjs/core/http'
-import { Database } from '@adonisjs/lucid/database'
 import nodeFetch from 'node-fetch'
 import { parseString } from 'xml2js'
 import db from '@adonisjs/lucid/services/db'
+import assert from 'assert'
+import fs from 'fs'
+import app from '@adonisjs/core/services/app'
+import { cuid } from '@adonisjs/core/helpers'
+import { addPlanValidator } from '#validators/place'
+import FavoritePlace from '#models/favorite_place'
 
 export default class PlacesController {
   async places({ request }: HttpContext) {
+    let search = request.only(['search']).search
+
     return await Place.query()
+      .select('id', 'name', 'city', 'address')
+      .whereILike('city', '%' + search + '%')
+      .orWhereILike('name', '%' + search + '%')
+      .orWhereILike('address', '%' + search + '%')
+  }
+
+  /**
+   * @getPlan
+   * @summary get place plan
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   * @responseBody 401 - Wrong image name
+   */
+  async getPlan({ request, response }: HttpContext) {
+    let place = await Place.findOrFail(request.params().id)
+    console.log(place.plan)
+    console.log(request.params())
+
+    if (place.plan.includes(request.params().id_plan)) {
+      const image = fs.createReadStream('uploads/plans/' + request.params().id_plan)
+      response.stream(image)
+    } else {
+      response.status(422).send('Wrong plan name')
+      return
+    }
+  }
+
+  /**
+   * @getPlaceId
+   * @summary get specific place
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async getPlaceId({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
+
+    return await Place.query()
+      .withCount('favorite', (query) =>
+        query.count('*').as('is_favorite').where('user_id', user_id)
+      )
+      .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+      .where('id', request.params().id)
+  }
+
+  /**
+   * @addPlanPlaceId
+   * @summary add plan for place
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async addPlanPlaceId({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let payload = await request.validateUsing(addPlanValidator)
+    let place = await Place.findOrFail(request.params().id)
+
+    // create unique image name
+    let planName = `${cuid()}.${payload.plan.extname}`
+    // save image
+    payload.plan.move(app.makePath('uploads/plans'), {
+      name: planName,
+    })
+
+    if (place.plan) {
+      place.plan.push(planName)
+    } else {
+      place.plan = [planName]
+    }
+    await place.save()
+
+    return place
+  }
+
+  /**
+   * @favoritePlace
+   * @summary favorite or unfavorite place
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async favoritePlace({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let place_id = request.params().id
+    let user_id = auth.user.id
+
+    // check if place exist
+    await Place.findOrFail(place_id)
+
+    let favorite = await FavoritePlace.query()
+      .where('place_id', place_id)
+      .andWhere('user_id', user_id)
+
+    if (favorite.length === 0) {
+      // create favorite
+      await FavoritePlace.create({ place_id, user_id })
+      return await Place.query()
+        .withCount('favorite', (query) =>
+          query.count('*').as('is_favorite').where('user_id', user_id)
+        )
+        .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+        .where('id', place_id)
+    } else {
+      // unfavorite
+      await FavoritePlace.query().where('place_id', place_id).andWhere('user_id', user_id).delete()
+
+      return await Place.query()
+        .withCount('favorite', (query) =>
+          query.count('*').as('is_favorite').where('user_id', user_id)
+        )
+        .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+        .where('id', place_id)
+    }
   }
 
   /**
@@ -20,7 +134,6 @@ export default class PlacesController {
     let url = 'http://www.overpass-api.de/api/interpreter?data='
 
     url += `area["name:fr"="France"]['admin_level'='2']->.country;(node [sport=climbing](area.country););(._;>;); out geom;`
-
     let tags: any = []
 
     await nodeFetch(url)
@@ -55,7 +168,7 @@ export default class PlacesController {
                 point.postal_code = element['$'].v
               }
               if (element['$'].k === 'addr:housenumber') {
-                point.address = element['$'].v
+                point.address = element['$'].v + ' '
               }
               if (element['$'].k === 'addr:street') {
                 point.address += element['$'].v

@@ -11,7 +11,6 @@ import fs from 'fs'
 import { middleware } from './kernel.js'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
-import mail from '@adonisjs/mail/services/main'
 import { HttpContext } from '@adonisjs/core/http'
 
 const AuthController = () => import('#controllers/auth_controller')
@@ -36,6 +35,8 @@ router.get('/', async () => {
 })
 router.post('/register', [UsersController, 'register'])
 router.post('/login', [AuthController, 'login'])
+router.post('/password_lost', [AuthController, 'passwordLost'])
+router.post('/reset_password', [AuthController, 'resetPassword'])
 router.get('/logout', [AuthController, 'logout']).use(middleware.auth())
 
 router
@@ -49,6 +50,9 @@ router
   .use([middleware.auth(), middleware.role(['USER'])])
 router
   .get('/users/:id', [UsersController, 'getUserId'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+router
+  .get('/users/:id/avatar/:id_avatar', [UsersController, 'getAvatar'])
   .use([middleware.auth(), middleware.role(['USER'])])
 router
   .post('/users/:id/follow', [UsersController, 'followUser'])
@@ -75,7 +79,6 @@ router
 router
   .get('/posts/:id/image/:id_image', [PostsController, 'getImage'])
   .use([middleware.auth(), middleware.role(['USER'])])
-
 router
   .post('/posts/:id/comment', [PostsController, 'createComment'])
   .use([middleware.auth(), middleware.role(['USER'])])
@@ -85,18 +88,22 @@ router
   .use([middleware.auth(), middleware.role(['USER'])])
 
 router
+  .get('/places/:id', [PlacesController, 'getPlaceId'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+router
+  .get('/places/:id/plan/:id_plan', [PlacesController, 'getPlan'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+router
+  .post('/places/:id/plan', [PlacesController, 'addPlanPlaceId'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+router
+  .post('/places/:id/favorite', [PlacesController, 'favoritePlace'])
+  .use([middleware.auth(), middleware.role(['USER'])])
+router
   .get('/places/load', [PlacesController, 'load'])
   .use([middleware.auth(), middleware.role(['USER'])])
 
-router.get('/image/:name', async ({ request, response }: HttpContext) => {
-  // await mail.send((message) => {
-  //   message
-  //     .to('alexandrechabane72@gmail.com')
-  //     .from('boulder_problem@chabs.fr')
-  //     .subject('Verify your email address')
-  //     .htmlView('emails/email_1', { title: 'Boulder Problem' })
-  // })
-
-  const image = fs.createReadStream('./files/user_image/' + request.params().name)
+router.get('/plans', async ({ response }: HttpContext) => {
+  const image = fs.createReadStream('./uploads/plans/Climbing_gym_plan_1.svg')
   response.stream(image)
 })

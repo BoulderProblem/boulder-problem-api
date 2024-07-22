@@ -1,16 +1,36 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
-import { Database } from '@adonisjs/lucid/database'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { Opaque } from '@adonisjs/core/types/helpers'
+import Like from './like.js'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import FavoritePlace from './favorite_place.js'
+
+export type placeId = Opaque<'placeId', string>
 
 export default class Place extends BaseModel {
   @column({ isPrimary: true })
-  declare id: number
+  declare id: placeId
 
   @column()
   declare coordinate: any
 
   @column()
   declare geocoordinate: any
+
+  @column()
+  declare plan: string[]
+
+  @column()
+  declare favorite_count: number
+
+  @column()
+  declare is_favorite: number
+
+  @hasMany(() => FavoritePlace, {
+    foreignKey: 'place_id',
+    serializeAs: null,
+  })
+  declare favorite: HasMany<typeof FavoritePlace>
 
   @column()
   declare osm_id: string

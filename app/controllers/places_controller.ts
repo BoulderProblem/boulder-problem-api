@@ -6,40 +6,41 @@ import nodeFetch from 'node-fetch'
 import { parseString } from 'xml2js'
 import db from '@adonisjs/lucid/services/db'
 import assert from 'assert'
-import fs from 'fs'
-import app from '@adonisjs/core/services/app'
-import { cuid } from '@adonisjs/core/helpers'
-import { addPlanValidator } from '#validators/place'
 import FavoritePlace from '#models/favorite_place'
+import Zone from '#models/zone'
+import { updatePlaceValidator } from '#validators/place'
 
 export default class PlacesController {
-  async places({ request }: HttpContext) {
+  async places({ auth, request }: HttpContext) {
     let search = request.only(['search']).search
+    let page = request.only(['page']).page
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
 
-    return await Place.query()
+    let res: any = await Place.query()
       .select('id', 'name', 'city', 'address')
+      .withCount('favorite', (query) =>
+        query.count('*').as('is_favorite').where('user_id', user_id)
+      )
       .whereILike('city', '%' + search + '%')
       .orWhereILike('name', '%' + search + '%')
       .orWhereILike('address', '%' + search + '%')
-  }
+      .paginate(page, 10)
 
-  /**
-   * @getPlan
-   * @summary get place plan
-   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
-   * @responseBody 401 - Wrong image name
-   */
-  async getPlan({ request, response }: HttpContext) {
-    let place = await Place.findOrFail(request.params().id)
-    console.log(place.plan)
-    console.log(request.params())
-
-    if (place.plan.includes(request.params().id_plan)) {
-      const image = fs.createReadStream('uploads/plans/' + request.params().id_plan)
-      response.stream(image)
+    // check if page number exist
+    if (res.currentPage > res.lastPage) {
+      page = res.lastPage
+      return await Place.query()
+        .select('id', 'name', 'city', 'address')
+        .withCount('favorite', (query) =>
+          query.count('*').as('is_favorite').where('user_id', user_id)
+        )
+        .whereILike('city', '%' + search + '%')
+        .orWhereILike('name', '%' + search + '%')
+        .orWhereILike('address', '%' + search + '%')
+        .paginate(page, 10)
     } else {
-      response.status(422).send('Wrong plan name')
-      return
+      return res
     }
   }
 
@@ -58,33 +59,25 @@ export default class PlacesController {
       )
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
       .where('id', request.params().id)
+      .first()
   }
 
-  /**
-   * @addPlanPlaceId
-   * @summary add plan for place
-   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
-   */
-  async addPlanPlaceId({ auth, request }: HttpContext) {
-    assert(auth.user, 'kindly login')
-    let payload = await request.validateUsing(addPlanValidator)
+  async getPlaceZones({ auth, request }: HttpContext) {
+    return await Zone.query().where('place_id', request.params().id).orderBy('created_at', 'asc')
+  }
+
+  async updatePlaceId({ auth, request }: HttpContext) {
+    let payload = await request.validateUsing(updatePlaceValidator)
     let place = await Place.findOrFail(request.params().id)
 
-    // create unique image name
-    let planName = `${cuid()}.${payload.plan.extname}`
-    // save image
-    payload.plan.move(app.makePath('uploads/plans'), {
-      name: planName,
-    })
+    payload.geocoordinate = db
+      .st()
+      .geomFromText('SRID=4326;POINT(' + payload.coordinate.x + ' ' + payload.coordinate.y + ')')
+    payload.coordinate = payload.coordinate.x + ',' + payload.coordinate.y
 
-    if (place.plan) {
-      place.plan.push(planName)
-    } else {
-      place.plan = [planName]
-    }
-    await place.save()
+    await place.merge({ ...payload }).save()
 
-    return place
+    return await Place.findOrFail(request.params().id)
   }
 
   /**
@@ -145,6 +138,7 @@ export default class PlacesController {
 
           for (const node of result.osm.node) {
             const point = new Place()
+            point.address = ''
             node.tag.forEach((element: any) => {
               if (element['$'].k === 'leisure') {
                 point.sport_center = element['$'].v === 'sports_centre'

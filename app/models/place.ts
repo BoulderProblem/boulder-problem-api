@@ -17,14 +17,19 @@ export default class Place extends BaseModel {
   @column()
   declare geocoordinate: any
 
-  @column()
-  declare plan: string[]
-
-  @column()
+  @column({
+    serialize: (value: string) => {
+      return parseInt(value)
+    },
+  })
   declare favorite_count: number
 
-  @column()
-  declare is_favorite: number
+  @column({
+    serialize: (value: string) => {
+      return Boolean(parseInt(value))
+    },
+  })
+  declare is_favorite: boolean
 
   @hasMany(() => FavoritePlace, {
     foreignKey: 'place_id',
@@ -33,10 +38,10 @@ export default class Place extends BaseModel {
   declare favorite: HasMany<typeof FavoritePlace>
 
   @column()
-  declare osm_id: string
+  declare osmId: string
 
   @column()
-  declare sport_center: boolean
+  declare sportCenter: boolean
 
   @column()
   declare name: string
@@ -54,7 +59,7 @@ export default class Place extends BaseModel {
   declare city: string
 
   @column()
-  declare postal_code: string
+  declare postalCode: string
 
   @column()
   declare address: string
@@ -63,16 +68,16 @@ export default class Place extends BaseModel {
   declare outdoor: boolean
 
   @column()
-  declare grade_min: string
+  declare gradeMin: string
 
   @column()
-  declare grade_max: string
+  declare gradeMax: string
 
   @column()
-  declare length_min: string
+  declare lengthMin: string
 
   @column()
-  declare length_max: string
+  declare lengthMax: string
 
   @column()
   declare routes: string

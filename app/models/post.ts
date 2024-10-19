@@ -24,14 +24,26 @@ export default class Post extends BaseModel {
   @column()
   declare user_id: userId
 
-  @column()
+  @column({
+    serialize: (value: string) => {
+      return parseInt(value)
+    },
+  })
   declare likes_count: number
 
-  @column()
+  @column({
+    serialize: (value: string) => {
+      return parseInt(value)
+    },
+  })
   declare comments_count: number
 
-  @column()
-  declare is_like: number
+  @column({
+    serialize: (value: string) => {
+      return Boolean(parseInt(value))
+    },
+  })
+  declare is_like: boolean
 
   @hasMany(() => Like, {
     foreignKey: 'post_id',

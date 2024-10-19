@@ -8,7 +8,7 @@ export default class extends BaseSchema {
       table.increments('id')
       table.uuid('user_id').unsigned().references('id').inTable('users').notNullable()
       table
-        .uuid('place_id')
+        .integer('place_id')
         .unsigned()
         .references('id')
         .inTable('places')

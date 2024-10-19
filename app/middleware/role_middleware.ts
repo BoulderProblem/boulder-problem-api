@@ -13,7 +13,7 @@ export default class AuthMiddleware {
    */
   redirectTo = '/login'
 
-  async handle({ auth, response }: HttpContext, next: NextFn, guards: string[]) {
+  async handle({ auth, response, request }: HttpContext, next: NextFn, guards: string[]) {
     const roleIds = guards.map((guard: string) => Roles[guard])
 
     if (!roleIds.includes(auth.user?.role_id)) {

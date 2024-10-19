@@ -7,6 +7,7 @@ import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import { DateTime } from 'luxon'
 import fs from 'fs'
+import sharp from 'sharp'
 
 export default class UsersController {
   /**
@@ -93,10 +94,15 @@ export default class UsersController {
    */
   async getAvatar({ request, response }: HttpContext) {
     let user = await User.findOrFail(request.params().id)
-    if (user.avatar === request.params().id_avatar) {
-      const image = fs.createReadStream('./uploads/users/' + request.params().id_avatar)
+    let size = 500
+    if (request.qs().size) {
+      size = parseInt(request.qs().size)
+    }
 
-      response.stream(image)
+    if (user.avatar === request.params().id_avatar) {
+      const image = await sharp('./uploads/users/' + request.params().id_avatar).resize(size)
+
+      await response.stream(image)
     } else {
       response.status(422).send("nom de l'avatar incorrect")
       return

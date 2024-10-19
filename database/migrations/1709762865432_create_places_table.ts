@@ -5,10 +5,9 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.uuid('id').primary().defaultTo(this.db.rawQuery('gen_random_uuid()').knexQuery)
+      table.increments('id')
       table.point('coordinate').notNullable()
       table.geometry('geocoordinate').notNullable()
-      table.specificType('plan', 'varchar[]')
       table.string('osm_id')
       table.boolean('sport_center')
       table.string('name')

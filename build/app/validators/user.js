@@ -15,7 +15,7 @@ export const createUserValidator = vine.compile(vine.object({
     birth_date: vine.date({
         formats: ['YYYY/MM/DD', 'x'],
     }),
-    gender_id: vine.number(),
+    genderId: vine.number(),
 }));
 export const updateUserValidator = vine.compile(vine.object({
     firstname: vine.string().trim().minLength(2).optional(),
@@ -23,8 +23,7 @@ export const updateUserValidator = vine.compile(vine.object({
     birth_date: vine
         .date({
         formats: ['YYYY/MM/DD', 'x'],
-    })
-        .optional(),
-    gender_id: vine.number().optional(),
+    }).optional(),
+    genderId: vine.number().optional(),
 }));
 //# sourceMappingURL=user.js.map

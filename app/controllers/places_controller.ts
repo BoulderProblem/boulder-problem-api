@@ -8,42 +8,52 @@ import db from '@adonisjs/lucid/services/db'
 import assert from 'assert'
 import FavoritePlace from '#models/favorite_place'
 import Zone from '#models/zone'
-import { updatePlaceValidator } from '#validators/place'
+import { favoritePlaceValidator, updatePlaceValidator } from '#validators/place'
+import sharp from 'sharp'
+import User from '#models/user'
 
 export default class PlacesController {
   async places({ auth, request }: HttpContext) {
     let search = request.only(['search']).search
     let page = request.only(['page']).page
+    if (!page) {
+      page = 1
+    }
+
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
 
     let res: any = await Place.query()
-      .select('id', 'name', 'city', 'address')
+      .select('id', 'name', 'city', 'address', 'logo')
       .withCount('favorite', (query) =>
         query.count('*').as('is_favorite').where('user_id', user_id)
       )
       .whereILike('city', '%' + search + '%')
       .orWhereILike('name', '%' + search + '%')
       .orWhereILike('address', '%' + search + '%')
+      .orderBy('is_favorite', 'desc')
       .paginate(page, 10)
-
-    // check if page number exist
-    if (res.currentPage > res.lastPage) {
-      page = res.lastPage
-      return await Place.query()
-        .select('id', 'name', 'city', 'address')
-        .withCount('favorite', (query) =>
-          query.count('*').as('is_favorite').where('user_id', user_id)
-        )
-        .whereILike('city', '%' + search + '%')
-        .orWhereILike('name', '%' + search + '%')
-        .orWhereILike('address', '%' + search + '%')
-        .paginate(page, 10)
-    } else {
-      return res
-    }
+    return res
   }
 
+  /**
+   * @getMine
+   * @summary get my places
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async getMine({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
+    return await Place.query()
+      .preload('owner', (query) => {
+        query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+      })
+      .withCount('favorite', (query) =>
+        query.count('*').as('is_favorite').where('user_id', user_id)
+      )
+      .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+      .where('ownerId', user_id)
+  }
   /**
    * @getPlaceId
    * @summary get specific place
@@ -52,14 +62,47 @@ export default class PlacesController {
   async getPlaceId({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
+    if (auth.user.roleId === 1) {
+      return await Place.query()
+        .withCount('favorite', (query) =>
+          query.count('*').as('is_favorite').where('user_id', user_id)
+        )
+        .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+        .where('id', request.params().id)
+        .first()
+    } else {
+      return await Place.query()
+        .preload('owner', (query) => {
+          query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+        })
+        .withCount('favorite', (query) =>
+          query.count('*').as('is_favorite').where('user_id', user_id)
+        )
+        .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+        .where('id', request.params().id)
+        .first()
+    }
+  }
 
-    return await Place.query()
-      .withCount('favorite', (query) =>
-        query.count('*').as('is_favorite').where('user_id', user_id)
-      )
-      .withCount('favorite', (query) => query.count('*').as('favorite_count'))
-      .where('id', request.params().id)
-      .first()
+  /**
+   * @getLogo
+   * @summary get place logo
+   * @responseBody 200 - image 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async getLogo({ request, response }: HttpContext) {
+    let place = await Place.findOrFail(request.params().id)
+    let size = 500
+    if (request.qs().size) {
+      size = parseInt(request.qs().size)
+    }
+
+    if (place.logo) {
+      const image = await sharp('./uploads/places/' + place.logo).resize(size)
+      await response.stream(image)
+    } else {
+      response.status(422).send('Logo non existant')
+      return
+    }
   }
 
   async getPlaceZones({ auth, request }: HttpContext) {
@@ -75,6 +118,14 @@ export default class PlacesController {
       .geomFromText('SRID=4326;POINT(' + payload.coordinate.x + ' ' + payload.coordinate.y + ')')
     payload.coordinate = payload.coordinate.x + ',' + payload.coordinate.y
 
+    // if add owner to place
+    if (!place.ownerId && payload.ownerId) {
+      let user = await User.findOrFail(payload.ownerId)
+      if (user.roleId === 1) {
+        await user.merge({ ...{ roleId: 2 } }).save()
+      }
+    }
+
     await place.merge({ ...payload }).save()
 
     return await Place.findOrFail(request.params().id)
@@ -87,6 +138,7 @@ export default class PlacesController {
    */
   async favoritePlace({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let payload = await request.validateUsing(favoritePlaceValidator)
     let place_id = request.params().id
     let user_id = auth.user.id
 
@@ -97,26 +149,22 @@ export default class PlacesController {
       .where('place_id', place_id)
       .andWhere('user_id', user_id)
 
-    if (favorite.length === 0) {
-      // create favorite
+    // create favorite
+    if (favorite.length === 0 && payload.favorite) {
       await FavoritePlace.create({ place_id, user_id })
-      return await Place.query()
-        .withCount('favorite', (query) =>
-          query.count('*').as('is_favorite').where('user_id', user_id)
-        )
-        .withCount('favorite', (query) => query.count('*').as('favorite_count'))
-        .where('id', place_id)
-    } else {
-      // unfavorite
-      await FavoritePlace.query().where('place_id', place_id).andWhere('user_id', user_id).delete()
-
-      return await Place.query()
-        .withCount('favorite', (query) =>
-          query.count('*').as('is_favorite').where('user_id', user_id)
-        )
-        .withCount('favorite', (query) => query.count('*').as('favorite_count'))
-        .where('id', place_id)
     }
+
+    // unfavorite
+    if (favorite.length === 1 && !payload.favorite) {
+      await FavoritePlace.query().where('place_id', place_id).andWhere('user_id', user_id).delete()
+    }
+
+    return await Place.query()
+      .withCount('favorite', (query) =>
+        query.count('*').as('is_favorite').where('user_id', user_id)
+      )
+      .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+      .where('id', place_id)
   }
 
   /**

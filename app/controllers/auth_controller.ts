@@ -92,8 +92,6 @@ export default class AuthController {
     const payload = await request.validateUsing(resetPasswordValidator)
 
     const reset = await ResetPassword.query().where('email', payload.email)
-    console.log(reset)
-    console.log(reset.length)
 
     if (reset.length === 1) {
       if (reset[0].code === payload.code) {

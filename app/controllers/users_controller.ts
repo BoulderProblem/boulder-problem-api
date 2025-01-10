@@ -1,19 +1,21 @@
 import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
+import nodeFetch from 'node-fetch'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import Follow from '#models/follow'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import { DateTime } from 'luxon'
-import fs from 'fs'
 import sharp from 'sharp'
+import axios from 'axios'
+import fs from 'fs'
 
 export default class UsersController {
   /**
    * @register
    * @summary create user
-   * @requestBody {"email": "test@test.fr", "password": "test", "firstname": "Alexandre", "lastname": "Chabane", "birth_date": "1995/06/28", "gender_id": "1"}
+   * @requestBody {"email": "test@test.fr", "password": "test", "firstname": "Alexandre", "lastname": "Chabane", "birth_date": "1995/06/28", "genderId": "1"}
    * @responseBody 200 - {"token": "oat_MTk.cVNCck0yZDEzRnVwc0p4MHZFaDhUTEVGOU5feUIyR0pERS04MUw0UTM5MjQ4NjI0Nzk"}
    */
   async register({ request }: HttpContext) {
@@ -26,16 +28,67 @@ export default class UsersController {
     return token
   }
 
+  async generate({ request }: HttpContext) {
+    let results
+    let url = 'https://randomuser.me/api/?nat=fr&results=1000'
+
+    await nodeFetch(url)
+      .then((response) => response.json())
+      .then((data: any) => {
+        results = data.results
+      })
+
+    for (let result of results) {
+      let avatar = `${cuid()}.jpg`
+      const response = await axios.get(result.picture.large, { responseType: 'arraybuffer' })
+
+      await fs.writeFileSync('uploads/users/' + avatar, response.data)
+
+      let user = {
+        firstname: result.name.first,
+        lastname: result.name.last,
+        email: result.email,
+        password: result.login.password,
+        birth_date: result.dob.date.slice(0, 10),
+        gender_id: result.gender === 'female' ? 2 : 1,
+        avatar: avatar,
+        created_at: DateTime.local().minus({ days: Math.floor(Math.random() * 365) }),
+      }
+      await User.create(user)
+    }
+    // const user = await User.create(data)
+
+    return
+  }
+
   /**
    * @getUsers
    * @summary getAll users
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async getUsers({ auth }: HttpContext) {
+  async getUsers({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
+    let search = request.only(['search']).search
+    let page = request.only(['page']).page
+    if (!page) {
+      page = 1
+    }
+
     return await User.query()
+      .select('id', 'firstname', 'lastname', 'avatar', 'email', 'roleId')
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
+      .withCount('followers', (query) =>
+        query.count('*').as('is_following').where('user_follower_id', user_id)
+      )
+      .whereILike('firstname', '%' + search + '%')
+      .orWhereILike('lastname', '%' + search + '%')
+      .orWhereILike('email', '%' + search + '%')
+      .orderBy('is_following', 'desc')
+      .orderBy('firstname', 'asc')
+      .orderBy('lastname', 'asc')
+      .paginate(page, 10)
   }
 
   /**
@@ -45,10 +98,12 @@ export default class UsersController {
    */
   async getUser({ auth }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
     return await User.query()
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
-      .where('id', auth.user.id)
+      .where('id', user_id)
+      .first()
   }
   /**
    * @updateUserId
@@ -57,6 +112,7 @@ export default class UsersController {
    */
   async updateUserId({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
     let payload = await request.validateUsing(updateUserValidator)
     let user = await User.findOrFail(request.params().id)
 
@@ -70,9 +126,16 @@ export default class UsersController {
       })
     }
 
-    await user.merge({ ...payload, ...{ avatar }, ...{ updatedAt: DateTime.local() } }).save()
+    await user.merge({ ...payload, ...{ avatar } }).save()
 
-    return user
+    return await User.query()
+      .withCount('followers', (query) => query.count('*').as('follower'))
+      .withCount('followings', (query) => query.count('*').as('following'))
+      .withCount('followers', (query) =>
+        query.count('*').as('is_following').where('user_follower_id', user_id)
+      )
+      .where('id', request.params().id)
+      .first()
   }
 
   /**
@@ -80,11 +143,17 @@ export default class UsersController {
    * @summary get specific user
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async getUserId({ request }: HttpContext) {
+  async getUserId({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
     return await User.query()
       .withCount('followers', (query) => query.count('*').as('follower'))
       .withCount('followings', (query) => query.count('*').as('following'))
+      .withCount('followers', (query) =>
+        query.count('*').as('is_following').where('user_follower_id', user_id)
+      )
       .where('id', request.params().id)
+      .first()
   }
 
   /**
@@ -129,7 +198,13 @@ export default class UsersController {
     if (follow.length === 0) {
       // create like
       await Follow.create({ user_follower_id, user_following_id })
-      return await User.query().preload('followers').where('id', user_following_id)
+      return await User.query()
+        .withCount('followers', (query) => query.count('*').as('follower'))
+        .withCount('followings', (query) => query.count('*').as('following'))
+        .withCount('followers', (query) =>
+          query.count('*').as('is_following').where('user_follower_id', user_follower_id)
+        )
+        .where('id', user_following_id)
     } else {
       // unlike
       await Follow.query()
@@ -137,7 +212,13 @@ export default class UsersController {
         .andWhere('user_following_id', user_following_id)
         .delete()
 
-      return await User.query().preload('followers').where('id', user_following_id)
+      return await User.query()
+        .withCount('followers', (query) => query.count('*').as('follower'))
+        .withCount('followings', (query) => query.count('*').as('following'))
+        .withCount('followers', (query) =>
+          query.count('*').as('is_following').where('user_follower_id', user_follower_id)
+        )
+        .where('id', user_following_id)
     }
   }
 }

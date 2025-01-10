@@ -16,7 +16,7 @@ export default class AuthMiddleware {
   async handle({ auth, response, request }: HttpContext, next: NextFn, guards: string[]) {
     const roleIds = guards.map((guard: string) => Roles[guard])
 
-    if (!roleIds.includes(auth.user?.role_id)) {
+    if (!roleIds.includes(auth.user?.roleId)) {
       return response.unauthorized({ error: `This is restricted to ${guards.join(', ')} users` })
     }
     // code for middleware goes here. ABOVE THE NEXT CALL

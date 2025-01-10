@@ -9,7 +9,7 @@ export const updatePlaceValidator = vine.compile(
     geocoordinate: vine.any().optional(),
     sportCenter: vine.boolean(),
     name: vine.string(),
-    hours: vine.string(),
+    hours: vine.string().optional(),
     phone: vine.string(),
     website: vine.string(),
     city: vine.string(),
@@ -21,5 +21,12 @@ export const updatePlaceValidator = vine.compile(
     lengthMin: vine.string().optional(),
     lengthMax: vine.string().optional(),
     routes: vine.string().optional(),
+    ownerId: vine.any().optional(),
+  })
+)
+
+export const favoritePlaceValidator = vine.compile(
+  vine.object({
+    favorite: vine.boolean(),
   })
 )

@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
 import { Opaque } from '@adonisjs/core/types/helpers'
 import Like from './like.js'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import FavoritePlace from './favorite_place.js'
+import User, { type userId } from './user.js'
 
 export type placeId = Opaque<'placeId', string>
 
@@ -16,6 +17,12 @@ export default class Place extends BaseModel {
 
   @column()
   declare geocoordinate: any
+
+  @column()
+  declare ownerId: userId
+
+  @belongsTo(() => User, { foreignKey: 'ownerId' })
+  declare owner: BelongsTo<typeof User>
 
   @column({
     serialize: (value: string) => {
@@ -45,6 +52,9 @@ export default class Place extends BaseModel {
 
   @column()
   declare name: string
+
+  @column()
+  declare logo: string
 
   @column()
   declare hours: string

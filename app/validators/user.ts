@@ -24,7 +24,7 @@ export const createUserValidator = vine.compile(
     birth_date: vine.date({
       formats: ['YYYY/MM/DD', 'x'],
     }),
-    gender_id: vine.number(),
+    genderId: vine.number(),
   })
 )
 
@@ -40,7 +40,8 @@ export const updateUserValidator = vine.compile(
         formats: ['YYYY/MM/DD', 'x'],
       })
       .optional(),
-    gender_id: vine.number().optional(),
+    genderId: vine.number().optional(),
+    roleId: vine.number().optional(),
     avatar: vine
       .file({
         size: '2mb',

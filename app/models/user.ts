@@ -28,6 +28,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare lastname: string
 
   @column()
+  declare fullname: string
+
+  @column()
   // @example(johndoe@example.com)
   declare email: string
 
@@ -46,10 +49,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare birth_date: Date
 
   @column()
-  declare role_id: number
+  declare roleId: number
 
   @column()
-  declare gender_id: number
+  declare genderId: number
 
   @column()
   declare follower: number
@@ -68,6 +71,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
     serializeAs: null,
   })
   declare followings: HasMany<typeof Follow>
+
+  @column({
+    serialize: (value: string) => {
+      return Boolean(parseInt(value))
+    },
+  })
+  declare is_following: boolean
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

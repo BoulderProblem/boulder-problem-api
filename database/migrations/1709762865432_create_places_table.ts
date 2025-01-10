@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.string('osm_id')
       table.boolean('sport_center')
       table.string('name')
+      table.string('logo')
       table.string('hours')
       table.string('phone')
       table.string('website')

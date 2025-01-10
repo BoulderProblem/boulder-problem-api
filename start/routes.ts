@@ -37,6 +37,7 @@ router.get('/', async () => {
     hello: 'world',
   }
 })
+router.get('/generate', [UsersController, 'generate'])
 router.post('/register', [UsersController, 'register'])
 router.post('/login', [AuthController, 'login'])
 router.post('/password_lost', [AuthController, 'passwordLost'])
@@ -45,124 +46,130 @@ router.get('/logout', [AuthController, 'logout']).use(middleware.auth())
 
 router
   .get('/stats', [StatsController, 'getStats'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['ADMIN'])])
 router
   .get('/users', [UsersController, 'getUsers'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/user', [UsersController, 'getUser'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .patch('/users/:id', [UsersController, 'updateUserId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .put('/users/:id', [UsersController, 'updateUserId'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/users/:id', [UsersController, 'getUserId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/users/:id/avatar/:id_avatar', [UsersController, 'getAvatar'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/users/:id/follow', [UsersController, 'followUser'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .get('/posts', [PostsController, 'getPosts'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/posts', [PostsController, 'addPosts'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/posts/:id', [PostsController, 'getPostId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .patch('/posts/:id', [PostsController, 'updatePosts'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .delete('/posts/:id', [PostsController, 'deletePostId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/posts/:id/like', [PostsController, 'likePost'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/posts/:id/image/:id_image', [PostsController, 'getImage'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/posts/:id/comment', [PostsController, 'createComment'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .get('/places', [PlacesController, 'places'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/places/load', [PlacesController, 'load'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['ADMIN'])])
+router
+  .get('/places/mine', [PlacesController, 'getMine'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .get('/places/:id', [PlacesController, 'getPlaceId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .put('/places/:id', [PlacesController, 'updatePlaceId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
+  .get('/places/:id/logo', [PlacesController, 'getLogo'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/places/:id/zones', [PlacesController, 'getPlaceZones'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/places/:id/favorite', [PlacesController, 'favoritePlace'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .post('/zones', [ZonesController, 'createZone'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .get('/zones/:id', [ZonesController, 'getZoneId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .put('/zones/:id', [ZonesController, 'updateZoneId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .get('/zones/:id/plan', [ZonesController, 'getPlan'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/zones/:id/walls', [ZonesController, 'getWallsZone'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .post('/walls/', [WallsController, 'createWall'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .get('/walls/:id', [WallsController, 'getWallId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/walls/:id/ways', [WallsController, 'getWallWays'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .post('/ways', [WaysController, 'createWay'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .get('/ways/:id', [WaysController, 'getWayId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .put('/ways/:id', [WaysController, 'updateWayId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .delete('/ways/:id', [WaysController, 'disableWayId'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .post('/ways/:id/comment', [WaysController, 'createWayComment'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/ways/:id/note', [WaysController, 'createWayNote'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/ways/:id/valid', [WaysController, 'createWayValid'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/ways/:id/valid', [WaysController, 'createWayValid'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .get('/colors', [ColorsController, 'getColors'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/difficulties', [DifficultiesController, 'getDifficulties'])
-  .use([middleware.auth(), middleware.role(['USER'])])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])

@@ -3,7 +3,7 @@ export default class AuthMiddleware {
     redirectTo = '/login';
     async handle({ auth, response }, next, guards) {
         const roleIds = guards.map((guard) => Roles[guard]);
-        if (!roleIds.includes(auth.user?.role_id)) {
+        if (!roleIds.includes(auth.user?.roleId)) {
             return response.unauthorized({ error: `This is restricted to ${guards.join(', ')} users` });
         }
         await next();

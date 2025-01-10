@@ -54,11 +54,11 @@ __decorate([
 __decorate([
     column(),
     __metadata("design:type", Number)
-], User.prototype, "role_id", void 0);
+], User.prototype, "roleId", void 0);
 __decorate([
     column(),
     __metadata("design:type", Number)
-], User.prototype, "gender_id", void 0);
+], User.prototype, "genderId", void 0);
 __decorate([
     column(),
     __metadata("design:type", Number)

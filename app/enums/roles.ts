@@ -1,8 +1,7 @@
 enum Roles {
   USER = 1,
-  AGENT = 2,
-  PHONEUR = 3,
-  ADMIN = 4,
+  MANAGER = 2,
+  ADMIN = 3,
 }
 
 export default Roles

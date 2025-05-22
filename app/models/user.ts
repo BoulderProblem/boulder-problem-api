@@ -7,6 +7,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import Follow from './follow.js'
 import { Opaque } from '@adonisjs/core/types/helpers'
+import Post from './post.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -54,11 +55,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare genderId: number
 
-  @column()
-  declare follower: number
-
-  @column()
-  declare following: number
+  public get nbFollower(): number {
+    return Number(this.$extras.nb_follower ?? 0)
+  }
+  public get nbFollowing(): number {
+    return Number(this.$extras.nb_following ?? 0)
+  }
+  public get nbPost(): number {
+    return Number(this.$extras.nb_post ?? 0)
+  }
 
   @hasMany(() => Follow, {
     foreignKey: 'user_following_id',
@@ -71,6 +76,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
     serializeAs: null,
   })
   declare followings: HasMany<typeof Follow>
+
+  @hasMany(() => Post, {
+    foreignKey: 'user_id',
+    serializeAs: null,
+  })
+  declare posts: HasMany<typeof Post>
 
   @column({
     serialize: (value: string) => {
@@ -92,4 +103,31 @@ export default class User extends compose(BaseModel, AuthFinder) {
     type: 'auth_token',
     tokenSecretLength: 40,
   })
+
+  public serializeWithExtras(options?: {
+    nbPost?: boolean
+    nbFollower?: boolean
+    nbFollowing?: boolean
+  }) {
+    let json = this.toJSON()
+    if (options?.nbPost) {
+      json = {
+        ...json,
+        nbPost: this.nbPost,
+      }
+    }
+    if (options?.nbFollower) {
+      json = {
+        ...json,
+        nbFollower: this.nbFollower,
+      }
+    }
+    if (options?.nbFollowing) {
+      json = {
+        ...json,
+        nbFollowing: this.nbFollowing,
+      }
+    }
+    return json
+  }
 }

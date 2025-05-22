@@ -10,7 +10,7 @@ export default class Zone extends BaseModel {
   declare id: zoneId
 
   @column()
-  declare place_id: placeId
+  declare placeId: placeId
 
   @column()
   declare name: string

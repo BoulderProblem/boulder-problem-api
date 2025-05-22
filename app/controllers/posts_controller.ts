@@ -15,16 +15,19 @@ export default class PostsController {
    * @summary get all user posts
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async getPosts({ auth }: HttpContext) {
+  async getPosts({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
-
+    let page = request.only(['page']).page
+    if (!page) {
+      page = 1
+    }
     return await Post.query()
-      .preload('user')
       .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .withCount('comments', (query) => query.count('*').as('comments_count'))
       .where('user_id', user_id)
+      .paginate(page, 10)
   }
 
   /**
@@ -100,7 +103,7 @@ export default class PostsController {
     let user_id = auth.user.id
 
     return await Post.query()
-      // .preload('user')
+      .preload('user')
       .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .where('id', request.params().id)

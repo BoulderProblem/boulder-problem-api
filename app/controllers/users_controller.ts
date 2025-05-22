@@ -77,8 +77,8 @@ export default class UsersController {
 
     return await User.query()
       .select('id', 'firstname', 'lastname', 'avatar', 'email', 'roleId')
-      .withCount('followers', (query) => query.count('*').as('follower'))
-      .withCount('followings', (query) => query.count('*').as('following'))
+      .withCount('followers', (query) => query.count('*').as('nb_follower'))
+      .withCount('followings', (query) => query.count('*').as('nb_following'))
       .withCount('followers', (query) =>
         query.count('*').as('is_following').where('user_follower_id', user_id)
       )
@@ -99,11 +99,14 @@ export default class UsersController {
   async getUser({ auth }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
-    return await User.query()
-      .withCount('followers', (query) => query.count('*').as('follower'))
-      .withCount('followings', (query) => query.count('*').as('following'))
+
+    let user = await User.query()
+      .withCount('followers', (query) => query.count('*').as('nb_follower'))
+      .withCount('followings', (query) => query.count('*').as('nb_following'))
+      .withCount('posts', (query) => query.count('*').as('nb_post'))
       .where('id', user_id)
       .first()
+    return user?.serializeWithExtras({ nbPost: true, nbFollower: true, nbFollowing: true })
   }
   /**
    * @updateUserId
@@ -129,8 +132,8 @@ export default class UsersController {
     await user.merge({ ...payload, ...{ avatar } }).save()
 
     return await User.query()
-      .withCount('followers', (query) => query.count('*').as('follower'))
-      .withCount('followings', (query) => query.count('*').as('following'))
+      .withCount('followers', (query) => query.count('*').as('nb_follower'))
+      .withCount('followings', (query) => query.count('*').as('nb_following'))
       .withCount('followers', (query) =>
         query.count('*').as('is_following').where('user_follower_id', user_id)
       )
@@ -147,8 +150,8 @@ export default class UsersController {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     return await User.query()
-      .withCount('followers', (query) => query.count('*').as('follower'))
-      .withCount('followings', (query) => query.count('*').as('following'))
+      .withCount('followers', (query) => query.count('*').as('nb_follower'))
+      .withCount('followings', (query) => query.count('*').as('nb_following'))
       .withCount('followers', (query) =>
         query.count('*').as('is_following').where('user_follower_id', user_id)
       )
@@ -199,8 +202,8 @@ export default class UsersController {
       // create like
       await Follow.create({ user_follower_id, user_following_id })
       return await User.query()
-        .withCount('followers', (query) => query.count('*').as('follower'))
-        .withCount('followings', (query) => query.count('*').as('following'))
+        .withCount('followers', (query) => query.count('*').as('nb_follower'))
+        .withCount('followings', (query) => query.count('*').as('nb_following'))
         .withCount('followers', (query) =>
           query.count('*').as('is_following').where('user_follower_id', user_follower_id)
         )
@@ -213,8 +216,8 @@ export default class UsersController {
         .delete()
 
       return await User.query()
-        .withCount('followers', (query) => query.count('*').as('follower'))
-        .withCount('followings', (query) => query.count('*').as('following'))
+        .withCount('followers', (query) => query.count('*').as('nb_follower'))
+        .withCount('followings', (query) => query.count('*').as('nb_following'))
         .withCount('followers', (query) =>
           query.count('*').as('is_following').where('user_follower_id', user_follower_id)
         )

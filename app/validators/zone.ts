@@ -5,7 +5,7 @@ import vine from '@vinejs/vine'
  */
 export const createZoneValidator = vine.compile(
   vine.object({
-    place_id: vine.any(),
+    placeId: vine.any(),
     image: vine
       .file({
         size: '1mb',

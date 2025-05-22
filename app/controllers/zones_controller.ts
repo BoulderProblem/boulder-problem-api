@@ -21,13 +21,13 @@ export default class ZonesController {
       // create unique image name
       imageName = `${cuid()}.${payload.image.extname}`
       // save image
-      await payload.image.move(app.makePath('uploads/posts'), {
+      await payload.image.move(app.makePath('uploads/plans'), {
         name: imageName,
       })
     }
     // save zone
     const zone = await Zone.create({
-      place_id: payload.place_id,
+      placeId: payload.placeId,
       name: payload.name,
       floor: payload.floor,
       image: imageName,

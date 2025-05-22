@@ -72,6 +72,12 @@ export default class Place extends BaseModel {
   declare postalCode: string
 
   @column()
+  declare houseNumber: string
+
+  @column()
+  declare street: string
+
+  @column()
   declare address: string
 
   @column()

@@ -11,6 +11,29 @@ import Zone from '#models/zone'
 import { favoritePlaceValidator, updatePlaceValidator } from '#validators/place'
 import sharp from 'sharp'
 import User from '#models/user'
+import axios from 'axios'
+
+const osmHeaders = {
+  Authorization: 'Bearer F3m7iKmSgejTFepceqPyyyS1Knqj5MIUBhqn68NLAmU',
+  Cookie: '_osm_totp_token=708664',
+}
+
+const correspondance = [
+  { name: 'hours', osm_name: 'opening_hours' },
+  { name: 'name', osm_name: 'name' },
+  { name: 'phone', osm_name: 'phone' },
+  { name: 'website', osm_name: 'website' },
+  { name: 'city', osm_name: 'addr:city' },
+  { name: 'houseNumber', osm_name: 'addr:housenumber' },
+  { name: 'postalCode', osm_name: 'addr:postcode' },
+  { name: 'street', osm_name: 'addr:street' },
+  { name: 'outdoor', osm_name: 'outdoor' },
+  { name: 'gradeMax', osm_name: 'climbing:grade:french:max' },
+  { name: 'gradeMin', osm_name: 'climbing:grade:french:min' },
+  { name: 'lengthMin', osm_name: 'climbing:length:min' },
+  { name: 'lengthMax', osm_name: 'climbing:length:max' },
+  { name: 'routes', osm_name: 'climbing:routes' },
+]
 
 export default class PlacesController {
   async places({ auth, request }: HttpContext) {
@@ -62,6 +85,7 @@ export default class PlacesController {
   async getPlaceId({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
+
     if (auth.user.roleId === 1) {
       return await Place.query()
         .withCount('favorite', (query) =>
@@ -105,6 +129,26 @@ export default class PlacesController {
     }
   }
 
+  async getAddresses({ auth, request }: HttpContext) {
+    let search = await axios.request({
+      method: 'get',
+      responseType: 'text',
+      url: `https://maps.googleapis.com/maps/api/place/autocomplete/json`,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+      params: {
+        input: request.qs().search,
+        components: 'country:fr',
+        key: process.env.KEY_GOOGLE,
+        language: 'fr', // Optionnel : langue des résultats
+      },
+    })
+    console.log(search.data)
+
+    return search.data
+  }
+
   async getPlaceZones({ auth, request }: HttpContext) {
     return await Zone.query().where('place_id', request.params().id).orderBy('created_at', 'asc')
   }
@@ -118,6 +162,18 @@ export default class PlacesController {
       .geomFromText('SRID=4326;POINT(' + payload.coordinate.x + ' ' + payload.coordinate.y + ')')
     payload.coordinate = payload.coordinate.x + ',' + payload.coordinate.y
 
+    let exclude = ['coordinate', 'ownerId', 'geocoordinate']
+    let updateData = []
+    for (let [key, value] of Object.entries(payload)) {
+      if (place[key] !== value && !exclude.includes(key)) {
+        if (correspondance.filter((corr) => corr.name === key).length > 0) {
+          key = correspondance.filter((corr) => corr.name === key)[0].osm_name
+          updateData.push({ key, value })
+        }
+      }
+    }
+    console.log(updateData)
+
     // if add owner to place
     if (!place.ownerId && payload.ownerId) {
       let user = await User.findOrFail(payload.ownerId)
@@ -128,7 +184,11 @@ export default class PlacesController {
 
     await place.merge({ ...payload }).save()
 
-    return await Place.findOrFail(request.params().id)
+    let updated_place = await Place.findOrFail(request.params().id)
+    if (updateData.length > 0) {
+      updateOSM(updated_place, updateData)
+    }
+    return updated_place
   }
 
   /**
@@ -189,7 +249,7 @@ export default class PlacesController {
             point.address = ''
             node.tag.forEach((element: any) => {
               if (element['$'].k === 'leisure') {
-                point.sport_center = element['$'].v === 'sports_centre'
+                point.sportCenter = element['$'].v === 'sports_centre'
               }
               if (element['$'].k === 'name') {
                 point.name = element['$'].v
@@ -266,4 +326,120 @@ export default class PlacesController {
     console.log('b')
     return 'plop'
   }
+}
+
+async function updateOSM(place: any, updateData: Array<any>) {
+  const changesetId = await createChangeset()
+
+  const currentNode = await getCurrentNode(place.osmId)
+
+  let xmlData =
+    '<osm><node id="' +
+    currentNode.id +
+    '" version="' +
+    currentNode.version +
+    '" changeset="' +
+    changesetId +
+    '" lat="' +
+    currentNode.lat +
+    '" lon="' +
+    currentNode.lon +
+    '">'
+
+  let keysAdded = []
+  for (let [key, value] of Object.entries(currentNode.tags)) {
+    keysAdded.push(key)
+    if (updateData.find((element) => element.key === key)) {
+      value = updateData.find((element) => element.key === key).value
+    }
+    xmlData += '<tag k="' + key + '" v="' + value + '"/>'
+  }
+  for (let data of updateData) {
+    if (!keysAdded.includes(data.key)) {
+      xmlData += '<tag k="' + data.key + '" v="' + data.value + '"/>'
+    }
+  }
+
+  xmlData += `</node></osm>`
+
+  console.log(xmlData)
+
+  await updateNode(place.osmId, changesetId, xmlData)
+
+  await closeChangeset(changesetId)
+}
+
+async function createChangeset() {
+  const xmlChangeset = `
+  <osm>
+    <changeset>
+      <tag k="comment" v="Mise à jour d'un nœud" />
+      <tag k="created_by" v="Boulder Problem" />
+    </changeset>
+  </osm>
+`
+
+  let changeset = await axios.request({
+    method: 'PUT',
+    data: xmlChangeset,
+    responseType: 'text',
+    url: 'https://api.openstreetmap.org/api/0.6/changeset/create',
+    headers: osmHeaders,
+  })
+
+  return changeset.data
+}
+
+async function getCurrentNode(nodeId: string) {
+  let result = await axios.request({
+    method: 'get',
+    responseType: 'text',
+    url: 'https://api.openstreetmap.org/api/0.6/node/' + nodeId,
+    headers: osmHeaders,
+  })
+
+  return {
+    id: JSON.parse(result.data).elements[0].id,
+    lat: JSON.parse(result.data).elements[0].lat,
+    lon: JSON.parse(result.data).elements[0].lon,
+    version: JSON.parse(result.data).elements[0].version,
+    tags: JSON.parse(result.data).elements[0].tags,
+  }
+}
+
+async function updateNode(nodeId: string, changesetId: string, xmlData: any) {
+  await axios
+    .request({
+      method: 'PUT',
+      maxBodyLength: Infinity,
+      responseType: 'text',
+      url: 'https://api.openstreetmap.org/api/0.6/node/' + nodeId,
+      data: xmlData,
+      headers: osmHeaders,
+      params: {
+        changeset: changesetId, // Inclure le changeset ID ici
+      },
+    })
+    .then((response) => {
+      console.log(JSON.stringify(response.data))
+    })
+    .catch((error) => {
+      console.log(error)
+    })
+}
+
+async function closeChangeset(changesetId: string) {
+  await axios
+    .request({
+      method: 'PUT',
+      responseType: 'text',
+      url: 'https://api.openstreetmap.org/api/0.6/changeset/' + changesetId + '/close',
+      headers: osmHeaders,
+    })
+    .then((response) => {
+      console.log(JSON.stringify(response.data))
+    })
+    .catch((error) => {
+      console.log(error)
+    })
 }

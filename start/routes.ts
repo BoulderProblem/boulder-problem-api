@@ -17,10 +17,10 @@ import ZonesController from '#controllers/zones_controller'
 import PlacesController from '#controllers/places_controller'
 import ColorsController from '#controllers/colors_controller'
 import DifficultiesController from '#controllers/difficulties_controller'
-
-const AuthController = () => import('#controllers/auth_controller')
-const UsersController = () => import('#controllers/users_controller')
-const PostsController = () => import('#controllers/posts_controller')
+import FeedController from '#controllers/feed_controller'
+import UsersController from '#controllers/users_controller'
+import AuthController from '#controllers/auth_controller'
+import PostsController from '#controllers/posts_controller'
 
 // returns swagger in YAML
 router.get('/swagger', async () => {
@@ -92,11 +92,18 @@ router
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
+  .get('/feed', [FeedController, 'getFeed'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+
+router
   .get('/places', [PlacesController, 'places'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/places/load', [PlacesController, 'load'])
   .use([middleware.auth(), middleware.role(['ADMIN'])])
+router
+  .get('/places/addresses', [PlacesController, 'getAddresses'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/places/mine', [PlacesController, 'getMine'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])

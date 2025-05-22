@@ -44,8 +44,8 @@ export const updateUserValidator = vine.compile(
     roleId: vine.number().optional(),
     avatar: vine
       .file({
-        size: '2mb',
-        extnames: ['jpg', 'png'],
+        size: '10mb',
+        extnames: ['jpg', 'png', 'jpeg', 'webp'],
       })
       .optional(),
     bio: vine.string().optional(),

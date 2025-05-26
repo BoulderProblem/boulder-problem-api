@@ -26,7 +26,7 @@ services:
       target: dependencies
     ports:
       - ${PORT}:${PORT}
-      - 9229:9229
+      - 9230:9230
     env_file:
       - .env
     environment:

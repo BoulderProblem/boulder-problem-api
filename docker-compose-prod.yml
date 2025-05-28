@@ -33,7 +33,7 @@ services:
       - DB_HOST=host.docker.internal
     volumes:
       - ./:/home/node/app
-    command: ash -c "node ace migration:run && dumb-init node ace build --ignore-ts-errors dotenv -e .env node build/server.js"
+    command: ash -c "node ace migration:run && dumb-init npm install --force node ace build --ignore-ts-errors dotenv -e .env node build/server.js"
 
 volumes:
   postgres_volume:

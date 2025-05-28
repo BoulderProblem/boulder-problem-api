@@ -5,7 +5,7 @@
   "type": "module",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "node bin/server.js",
+    "start": "dotenv -e .env node build/server.js",
     "build": "node ace build --ignore-ts-errors",
     "dev": "node ace serve --watch",
     "dev-ext": "PORT=3334 node ace serve --watch",
@@ -61,6 +61,7 @@
     "adonis-autoswagger": "^2.5.1",
     "axios": "^1.7.9",
     "better-sqlite3": "^9.4.1",
+    "dotenv-cli": "^8.0.0",
     "edge-iconify": "^2.0.1",
     "edge.js": "^6.0.1",
     "knex-postgis": "^0.14.3",

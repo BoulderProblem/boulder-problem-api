@@ -24,11 +24,6 @@ ENV HOST=0.0.0.0
 COPY --chown=node:node ./package*.json ./
 RUN npm ci --omit=dev
 
-COPY --chown=node:node --from=build /home/node/app/build ./build
-COPY --chown=node:node --from=build /home/node/app/public ./public
-COPY --chown=node:node --from=build /home/node/app/config ./config
-COPY --chown=node:node --from=build /home/node/app/.env ./.env
-
 EXPOSE 3333
 
 CMD [ "dumb-init", "node", "build/server.js" ]

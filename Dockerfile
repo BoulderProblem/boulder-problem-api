@@ -13,7 +13,6 @@ RUN npm ci
 COPY --chown=node:node . .
 
 FROM dependencies AS build
-COPY --chown=node:node .env .env
 RUN node ace build --ignore-ts-errors
 
 FROM base AS production

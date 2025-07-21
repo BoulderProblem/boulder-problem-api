@@ -31,3 +31,6 @@ services:
     environment:
       - DB_HOST=host.docker.internal
     command: dumb-init node build/server.js
+
+volumes:
+  postgres_volume:

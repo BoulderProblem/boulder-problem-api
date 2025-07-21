@@ -29,8 +29,9 @@ services:
     env_file:
       - .env
     environment:
-      - DB_HOST=host.docker.internal
-    command: dumb-init node build/server.js
+      - DB_HOST=postgres-prod  # <-- Important !
+    command: >
+      dumb-init sh -c "node build/ace migration:run && node build/server.js"
 
 volumes:
   postgres_volume:

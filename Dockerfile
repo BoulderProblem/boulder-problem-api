@@ -14,6 +14,7 @@ COPY --chown=node:node . .
 
 FROM dependencies AS build
 # AdonisJS 5 utilise déjà l’assembler en dépendance, pas besoin de le réinstaller
+COPY --chown=node:node .env .env
 RUN node ace build --ignore-ts-errors
 
 FROM base AS production

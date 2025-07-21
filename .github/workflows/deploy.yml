@@ -20,7 +20,7 @@ jobs:
       - name: Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
-            cd /Users/${{ secrets.SSH_USER }}/Documents/prod/boulder-problem-api
+            cd /home/ubuntu/boulder-problem-api
             git pull origin master
             docker compose -f docker-compose-prod.yml down
             docker compose -f docker-compose-prod.yml up -d --build

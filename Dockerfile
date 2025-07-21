@@ -13,7 +13,6 @@ RUN npm ci
 COPY --chown=node:node . .
 
 FROM dependencies AS build
-# AdonisJS 5 utilise déjà l’assembler en dépendance, pas besoin de le réinstaller
 COPY --chown=node:node .env .env
 RUN node ace build --ignore-ts-errors
 
@@ -23,6 +22,7 @@ ENV PORT=3333
 ENV HOST=0.0.0.0
 
 COPY --chown=node:node ./package*.json ./
+COPY --chown=node:node --from=build /home/node/app/build ./build
 RUN npm ci --omit=dev
 
 EXPOSE 3333

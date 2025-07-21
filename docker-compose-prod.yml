@@ -12,7 +12,7 @@ services:
       DB_DATABASE: ${DB_DATABASE}
     volumes:
       - postgres_volume:/var/lib/postgresql/data
-      - ./dockerConfig/init.sh:/docker-entrypoint-initdb.d/init.sh # will setup dev database adonis_app for us
+      - ./dockerConfig/init.sh:/docker-entrypoint-initdb.d/init.sh
     ports:
       - ${DB_PORT}:${DB_PORT}
 
@@ -23,17 +23,11 @@ services:
       - postgres-prod
     build:
       context: .
-      target: dependencies
+      target: production
     ports:
       - ${PORT}:${PORT}
-      - 9230:9230
     env_file:
       - .env
     environment:
       - DB_HOST=host.docker.internal
-    volumes:
-      - ./:/home/node/app
-    command: ash -c "node ace migration:run && dumb-init npm install --force node ace build --ignore-ts-errors dotenv -e .env node build/server.js"
-
-volumes:
-  postgres_volume:
+    command: dumb-init node build/server.js

@@ -44,20 +44,7 @@ export default class UsersController {
       const response = await axios.get(result.picture.large, { responseType: 'arraybuffer' })
       console.log(response)
 
-      //await fs.writeFileSync('/home/node/app/build/uploads/users/' + avatar, response.data)
-
-      const uploadDir = path.join('uploads', 'users')
-
-      // S’assurer que le dossier existe
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true })
-      }
-
-      const filePath = path.join(uploadDir, avatar)
-
-      // Ensuite, tu peux écrire en toute sécurité
-      fs.writeFileSync(filePath, response.data)
-      console.log('b')
+      await fs.writeFileSync('uploads/users/' + avatar, response.data)
 
       let user = {
         firstname: result.name.first,

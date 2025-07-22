@@ -10,6 +10,7 @@ import { DateTime } from 'luxon'
 import sharp from 'sharp'
 import axios from 'axios'
 import fs from 'fs'
+import path from 'path'
 
 export default class UsersController {
   /**
@@ -42,7 +43,19 @@ export default class UsersController {
       let avatar = `${cuid()}.jpg`
       const response = await axios.get(result.picture.large, { responseType: 'arraybuffer' })
 
-      await fs.writeFileSync('/home/node/app/build/uploads/users/' + avatar, response.data)
+      //await fs.writeFileSync('/home/node/app/build/uploads/users/' + avatar, response.data)
+
+      const uploadDir = path.join('uploads', 'users')
+
+      // S’assurer que le dossier existe
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true })
+      }
+
+      const filePath = path.join(uploadDir, avatar)
+
+      // Ensuite, tu peux écrire en toute sécurité
+      fs.writeFileSync(filePath, response.data)
 
       let user = {
         firstname: result.name.first,

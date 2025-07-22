@@ -42,7 +42,7 @@ export default class UsersController {
       let avatar = `${cuid()}.jpg`
       const response = await axios.get(result.picture.large, { responseType: 'arraybuffer' })
 
-      await fs.writeFileSync('uploads/users/' + avatar, response.data)
+      await fs.writeFileSync('./uploads/users/' + avatar, response.data)
 
       let user = {
         firstname: result.name.first,
@@ -118,6 +118,8 @@ export default class UsersController {
     let user_id = auth.user.id
     let payload = await request.validateUsing(updateUserValidator)
     let user = await User.findOrFail(request.params().id)
+
+    // TODO delete old avatar
 
     let avatar = user.avatar
     if (payload.avatar) {

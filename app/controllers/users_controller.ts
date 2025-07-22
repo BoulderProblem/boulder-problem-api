@@ -42,6 +42,7 @@ export default class UsersController {
     for (let result of results) {
       let avatar = `${cuid()}.jpg`
       const response = await axios.get(result.picture.large, { responseType: 'arraybuffer' })
+      console.log(response)
 
       //await fs.writeFileSync('/home/node/app/build/uploads/users/' + avatar, response.data)
 
@@ -56,6 +57,7 @@ export default class UsersController {
 
       // Ensuite, tu peux écrire en toute sécurité
       fs.writeFileSync(filePath, response.data)
+      console.log('b')
 
       let user = {
         firstname: result.name.first,

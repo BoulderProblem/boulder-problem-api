@@ -44,10 +44,7 @@ export default class UsersController {
       const response = await axios.get(result.picture.large, { responseType: 'arraybuffer' })
       console.log(response)
 
-      //await fs.writeFileSync('uploads/users/' + avatar, response.data)
-      response.data.move(app.makePath('uploads/users'), {
-        name: avatar,
-      })
+      await fs.writeFileSync('/homme/node/app/build/app/uploads/users/' + avatar, response.data)
 
       let user = {
         firstname: result.name.first,

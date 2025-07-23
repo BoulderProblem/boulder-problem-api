@@ -176,9 +176,7 @@ export default class UsersController {
     }
 
     if (user.avatar === request.params().id_avatar) {
-      const buffer = await sharp(
-        '/home/node/app/build/uploads/users/' + request.params().id_avatar
-      ).resize(size)
+      const buffer = await sharp('./uploads/users/' + request.params().id_avatar).resize(size)
       return response.stream(buffer)
     } else {
       return response.status(422).send("nom de l'avatar incorrect")

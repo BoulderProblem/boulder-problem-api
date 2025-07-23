@@ -122,7 +122,7 @@ export default class PlacesController {
 
     if (place.logo) {
       const image = await sharp('./uploads/places/' + place.logo).resize(size)
-      await response.stream(image)
+      return response.stream(image)
     } else {
       response.status(422).send('Logo non existant')
       return

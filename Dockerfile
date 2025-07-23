@@ -29,6 +29,7 @@ ENV PORT=3333
 ENV HOST=0.0.0.0
 
 RUN mkdir -p /home/node/app/build/uploads/users && chown -R node:node /home/node/app/build
+COPY --chown=node:node --from=dependencies /home/node/app/node_modules ./node_modules
 COPY --chown=node:node ./package*.json ./
 COPY --chown=node:node --from=build /home/node/app/build ./build
 RUN npm ci --omit=dev

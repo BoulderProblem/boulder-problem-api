@@ -33,7 +33,7 @@ services:
       - DB_HOST=host.docker.internal
     volumes:
       - ./:/home/node/app
-    command: ash -c "node ace migration:run && dumb-init node ace serve --watch"
+    command: sh -c "node ace migration:run && dumb-init node ace serve --watch"
 
 volumes:
   postgres_volume:

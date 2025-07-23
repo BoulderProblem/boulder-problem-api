@@ -12,6 +12,11 @@ import axios from 'axios'
 import fs from 'fs'
 import path from 'path'
 
+let imageRoute = `/home/node/app/build/uploads/users/`
+if (process.env.NODE_ENV !== 'production') {
+  imageRoute = `./uploads/users/`
+}
+
 export default class UsersController {
   /**
    * @register
@@ -176,7 +181,9 @@ export default class UsersController {
     }
 
     if (user.avatar === request.params().id_avatar) {
-      const buffer = await sharp('./uploads/users/' + request.params().id_avatar).resize(size)
+      console.log(imageRoute)
+
+      const buffer = await sharp(imageRoute + request.params().id_avatar).resize(size)
       return response.stream(buffer)
     } else {
       return response.status(422).send("nom de l'avatar incorrect")

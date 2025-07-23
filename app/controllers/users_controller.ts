@@ -10,7 +10,6 @@ import { DateTime } from 'luxon'
 import sharp from 'sharp'
 import axios from 'axios'
 import fs from 'fs'
-import path from 'path'
 
 export default class UsersController {
   /**

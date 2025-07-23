@@ -175,14 +175,11 @@ export default class UsersController {
     }
 
     if (user.avatar === request.params().id_avatar) {
-      // const image = await sharp('./uploads/users/' + request.params().id_avatar)
-      const image = await fs.readFileSync(
-        '/home/node/app/build/uploads/users/' + request.params().id_avatar
-      )
+      const image = await sharp('/home/node/app/build/uploads/users/' + request.params().id_avatar)
       console.log(image)
+      console.log('/home/node/app/build/uploads/users/' + request.params().id_avatar)
 
-      // await response.stream(image)
-      response.send(image)
+      await response.stream(image)
     } else {
       response.status(422).send("nom de l'avatar incorrect")
       return

@@ -179,7 +179,7 @@ export default class UsersController {
       const buffer = await sharp(
         '/home/node/app/build/uploads/users/' + request.params().id_avatar
       ).resize(size)
-      return response.send(buffer)
+      return response.stream(buffer)
     } else {
       return response.status(422).send("nom de l'avatar incorrect")
     }

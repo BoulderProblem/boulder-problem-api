@@ -10,6 +10,7 @@ import { DateTime } from 'luxon'
 import sharp from 'sharp'
 import axios from 'axios'
 import fs from 'fs'
+import path from 'path'
 
 export default class UsersController {
   /**
@@ -175,12 +176,13 @@ export default class UsersController {
     }
 
     if (user.avatar === request.params().id_avatar) {
-      const image = await sharp('/home/node/app/build/uploads/users/' + request.params().id_avatar)
-      await response.stream(image)
-      return
+      const buffer = await sharp('./uploads/users/' + request.params().id_avatar)
+        .resize(size)
+        .toBuffer()
+      response.header('Content-Type', 'image/' + request.params().id_avatar.split('.')[1])
+      return response.send(buffer)
     } else {
-      response.status(422).send("nom de l'avatar incorrect")
-      return
+      return response.status(422).send("nom de l'avatar incorrect")
     }
   }
 

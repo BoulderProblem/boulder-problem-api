@@ -176,7 +176,7 @@ export default class UsersController {
     }
 
     if (user.avatar === request.params().id_avatar) {
-      const buffer = await sharp('./uploads/users/' + request.params().id_avatar)
+      const buffer = await sharp('/home/node/app/build/uploads/users/' + request.params().id_avatar)
         .resize(size)
         .toBuffer()
       response.header('Content-Type', 'image/' + request.params().id_avatar.split('.')[1])

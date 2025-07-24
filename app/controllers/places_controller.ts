@@ -18,9 +18,9 @@ const osmHeaders = {
   Cookie: '_osm_totp_token=708664',
 }
 
-let imageRoute = `/home/node/app/build/uploads/users/`
+let imageRoute = `/home/node/app/build/uploads/plans/`
 if (process.env.NODE_ENV !== 'production') {
-  imageRoute = `./uploads/users/`
+  imageRoute = `./uploads/plans/`
 }
 
 const correspondance = [

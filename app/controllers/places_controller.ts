@@ -18,6 +18,11 @@ const osmHeaders = {
   Cookie: '_osm_totp_token=708664',
 }
 
+let imageRoute = `/home/node/app/build/uploads/users/`
+if (process.env.NODE_ENV !== 'production') {
+  imageRoute = `./uploads/users/`
+}
+
 const correspondance = [
   { name: 'hours', osm_name: 'opening_hours' },
   { name: 'name', osm_name: 'name' },
@@ -121,7 +126,7 @@ export default class PlacesController {
     }
 
     if (place.logo) {
-      const image = await sharp('./uploads/places/' + place.logo).resize(size)
+      const image = await sharp(imageRoute + place.logo).resize(size)
       return response.stream(image)
     } else {
       response.status(422).send('Logo non existant')

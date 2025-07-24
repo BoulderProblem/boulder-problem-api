@@ -6,6 +6,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import fs from 'fs'
 
+let imageRoute = `/home/node/app/build/uploads/plans/`
+if (process.env.NODE_ENV !== 'production') {
+  imageRoute = `./uploads/plans/`
+}
+
 export default class ZonesController {
   /**
    * @createZoneId
@@ -43,7 +48,7 @@ export default class ZonesController {
   async getPlan({ request, response }: HttpContext) {
     let zone = await Zone.findOrFail(request.params().id)
     if (zone.image) {
-      const image = await fs.createReadStream('uploads/plans/' + zone.image)
+      const image = await fs.createReadStream(imageRoute + zone.image)
       response.stream(image)
     } else {
       response.status(422).send("plan don't exist")
@@ -84,7 +89,7 @@ export default class ZonesController {
     if (payload.image) {
       if (zone.image) {
         // delete old image
-        fs.rmSync('uploads/plans/' + zone.image)
+        fs.rmSync(imageRoute + zone.image)
       }
       // create unique image name
       imageName = `${cuid()}.${payload.image.extname}`

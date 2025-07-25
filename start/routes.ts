@@ -102,9 +102,6 @@ router
   .get('/places/load', [PlacesController, 'load'])
   .use([middleware.auth(), middleware.role(['ADMIN'])])
 router
-  .get('/places/addresses', [PlacesController, 'getAddresses'])
-  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
-router
   .get('/places/mine', [PlacesController, 'getMine'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router

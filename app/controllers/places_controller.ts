@@ -134,26 +134,6 @@ export default class PlacesController {
     }
   }
 
-  async getAddresses({ auth, request }: HttpContext) {
-    let search = await axios.request({
-      method: 'get',
-      responseType: 'text',
-      url: `https://maps.googleapis.com/maps/api/place/autocomplete/json`,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
-      params: {
-        input: request.qs().search,
-        components: 'country:fr',
-        key: process.env.KEY_GOOGLE,
-        language: 'fr', // Optionnel : langue des résultats
-      },
-    })
-    console.log(search.data)
-
-    return search.data
-  }
-
   async getPlaceZones({ auth, request }: HttpContext) {
     return await Zone.query().where('place_id', request.params().id).orderBy('created_at', 'asc')
   }
@@ -177,7 +157,6 @@ export default class PlacesController {
         }
       }
     }
-    console.log(updateData)
 
     // if add owner to place
     if (!place.ownerId && payload.ownerId) {
@@ -305,7 +284,7 @@ export default class PlacesController {
             })
 
             // const point = new Place()
-            point.osm_id = node['$'].id
+            point.osmId = node['$'].id
             point.coordinate = node['$'].lon + ',' + node['$'].lat
             point.geocoordinate = db
               .st()
@@ -391,7 +370,6 @@ async function createChangeset() {
     url: 'https://api.openstreetmap.org/api/0.6/changeset/create',
     headers: osmHeaders,
   })
-
   return changeset.data
 }
 

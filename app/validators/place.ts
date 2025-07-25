@@ -7,8 +7,9 @@ export const updatePlaceValidator = vine.compile(
   vine.object({
     coordinate: vine.any().optional(),
     geocoordinate: vine.any().optional(),
-    sportCenter: vine.boolean(),
+    sportCenter: vine.boolean().optional(),
     name: vine.string(),
+    logo: vine.string().optional(),
     hours: vine.string().optional(),
     phone: vine.string().optional(),
     website: vine.string().optional(),
@@ -24,6 +25,12 @@ export const updatePlaceValidator = vine.compile(
     lengthMax: vine.string().optional(),
     routes: vine.string().optional(),
     ownerId: vine.any().optional(),
+    image: vine
+      .file({
+        size: '2mb',
+        extnames: ['jpg', 'png'],
+      })
+      .optional(),
   })
 )
 

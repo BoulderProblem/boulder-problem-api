@@ -135,6 +135,12 @@ export default class UsersController {
       payload.avatar.move(app.makePath('uploads/users'), {
         name: avatar,
       })
+
+      // supprimer l'ancienne image si elle existe
+      if (user.avatar) {
+        // delete old image
+        fs.rmSync(imageRoute + user.avatar)
+      }
     }
 
     await user.merge({ ...payload, ...{ avatar } }).save()

@@ -8,19 +8,21 @@ import db from '@adonisjs/lucid/services/db'
 import assert from 'assert'
 import FavoritePlace from '#models/favorite_place'
 import Zone from '#models/zone'
+import { cuid } from '@adonisjs/core/helpers'
 import { favoritePlaceValidator, updatePlaceValidator } from '#validators/place'
 import sharp from 'sharp'
 import User from '#models/user'
 import axios from 'axios'
+import fs from 'fs'
 
 const osmHeaders = {
   Authorization: 'Bearer F3m7iKmSgejTFepceqPyyyS1Knqj5MIUBhqn68NLAmU',
   Cookie: '_osm_totp_token=708664',
 }
 
-let imageRoute = `/home/node/app/build/uploads/plans/`
+let imageRoute = `/home/node/app/build/uploads/places/`
 if (process.env.NODE_ENV !== 'production') {
-  imageRoute = `./uploads/plans/`
+  imageRoute = `./uploads/places/`
 }
 
 const correspondance = [
@@ -124,6 +126,7 @@ export default class PlacesController {
     if (request.qs().size) {
       size = parseInt(request.qs().size)
     }
+    console.log(imageRoute + place.logo)
 
     if (place.logo) {
       const image = await sharp(imageRoute + place.logo).resize(size)
@@ -142,6 +145,10 @@ export default class PlacesController {
     let payload = await request.validateUsing(updatePlaceValidator)
     let place = await Place.findOrFail(request.params().id)
 
+    if (typeof payload.coordinate === 'string')
+      for (let [key, value] of Object.entries(payload)) {
+        if (key !== 'image') payload[key] = JSON.parse(value)
+      }
     payload.geocoordinate = db
       .st()
       .geomFromText('SRID=4326;POINT(' + payload.coordinate.x + ' ' + payload.coordinate.y + ')')
@@ -156,6 +163,25 @@ export default class PlacesController {
           updateData.push({ key, value })
         }
       }
+    }
+
+    // save image
+    const file = request.file('image')
+    if (file && file.isValid) {
+      const buffer = await fs.readFileSync(file.tmpPath!)
+
+      const fileName = `${cuid()}.${file.extname}`
+
+      await sharp(buffer).toFile(imageRoute + fileName)
+
+      // supprimer l'ancienne image si elle existe
+      if (place.logo) {
+        // delete old image
+        fs.rmSync(imageRoute + place.logo)
+      }
+      // Tu peux ajouter le nom de l’image au payload si tu veux l’enregistrer :
+      payload.logo = fileName
+      delete payload.image
     }
 
     // if add owner to place

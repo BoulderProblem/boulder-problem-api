@@ -10,6 +10,7 @@ import FavoritePlace from '#models/favorite_place'
 import Zone from '#models/zone'
 import { cuid } from '@adonisjs/core/helpers'
 import { favoritePlaceValidator, updatePlaceValidator } from '#validators/place'
+import app from '@adonisjs/core/services/app'
 import sharp from 'sharp'
 import User from '#models/user'
 import axios from 'axios'
@@ -165,21 +166,17 @@ export default class PlacesController {
     }
 
     // save image
-    const file = request.file('image')
-    if (file && file.isValid) {
-      const buffer = await fs.readFileSync(file.tmpPath!)
-
-      const fileName = `${cuid()}.${file.extname}`
-
-      await sharp(buffer).toFile(imageRoute + fileName)
-
-      // supprimer l'ancienne image si elle existe
+    if (payload.image) {
       if (place.logo) {
         // delete old image
         fs.rmSync(imageRoute + place.logo)
       }
-      // Tu peux ajouter le nom de l’image au payload si tu veux l’enregistrer :
-      payload.logo = fileName
+      // create unique image name
+      payload.logo = `${cuid()}.${payload.image.extname}`
+      // save image
+      payload.image.move(app.makePath('uploads/places'), {
+        name: payload.logo,
+      })
       delete payload.image
     }
 

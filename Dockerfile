@@ -28,7 +28,11 @@ ENV NODE_ENV=production
 ENV PORT=3333
 ENV HOST=0.0.0.0
 
-RUN mkdir -p /home/node/app/build/uploads/users && chown -R node:node /home/node/app/build
+RUN mkdir -p /home/node/app/build/uploads/users \
+             /home/node/app/build/uploads/places \
+             /home/node/app/build/uploads/plans \
+             /home/node/app/build/uploads/posts \
+  && chown -R node:node /home/node/app/build/uploads
 COPY --chown=node:node --from=dependencies /home/node/app/node_modules ./node_modules
 COPY --chown=node:node ./package*.json ./
 COPY --chown=node:node --from=build /home/node/app/build ./build

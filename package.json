@@ -50,6 +50,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@adonisjs/ally": "^5.1.0",
     "@adonisjs/assembler": "^7.1.1",
     "@adonisjs/auth": "^9.1.1",
     "@adonisjs/core": "^6.2.2",

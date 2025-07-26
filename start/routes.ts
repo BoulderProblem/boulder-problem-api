@@ -39,6 +39,8 @@ router.get('/', async () => {
 })
 router.get('/generate', [UsersController, 'generate'])
 router.post('/register', [UsersController, 'register'])
+router.get('/auth/google', [AuthController, 'redirect'])
+router.get('/auth/google/callback', [AuthController, 'callback'])
 router.post('/login', [AuthController, 'login'])
 router.post('/password_lost', [AuthController, 'passwordLost'])
 router.post('/reset_password', [AuthController, 'resetPassword'])

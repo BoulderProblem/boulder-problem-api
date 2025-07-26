@@ -6,6 +6,7 @@ import { assert } from '../utils.js'
 import { loginValidator, lostPasswordValidator, resetPasswordValidator } from '#validators/auth'
 import mail from '@adonisjs/mail/services/main'
 import ResetPassword from '#models/reset_password'
+
 import { DateTime, Interval } from 'luxon'
 
 export default class AuthController {
@@ -53,7 +54,6 @@ export default class AuthController {
     const oldReset = await ResetPassword.query().where('email', payload.email)
 
     let code = Math.floor(100000 + Math.random() * 900000)
-    console.log(code)
 
     if (user.length === 1) {
       let email = await mail.send((message) => {
@@ -66,7 +66,6 @@ export default class AuthController {
             code: code.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '),
           })
       })
-      console.log(email)
       // delete old reset
       if (oldReset.length === 1) {
         const reset = await ResetPassword.findOrFail(oldReset[0].id)
@@ -123,6 +122,70 @@ export default class AuthController {
       response.status(422).send('Form error')
       return
     }
+  }
+
+  async redirect({ ally }: HttpContext) {
+    return ally.use('google').redirect()
+  }
+
+  async callback({ ally, auth, response }: HttpContext) {
+    console.log('plop')
+
+    const google = ally.use('google')
+    console.log(google)
+
+    if (google.accessDenied()) {
+      console.log('Access denied')
+      return response.unauthorized('Access denied')
+    }
+
+    if (google.stateMisMatch()) {
+      console.log('State mismatch')
+      return response.badRequest('State mismatch')
+    }
+
+    if (google.hasError()) {
+      console.log('Error during authentication')
+      console.log(google.getError())
+      return response.badRequest(google.getError())
+    }
+
+    console.log('➡️ Avant récupération du profil Google')
+    try {
+      const user = await google.user()
+      console.log('✅ Utilisateur Google :', user)
+
+      // suite logique...
+      return response.ok(user)
+    } catch (error) {
+      console.error('❌ Erreur google.user():', error)
+      return response.internalServerError('Erreur Google OAuth')
+    }
+
+    const user = await this.findOrCreateUser(google)
+
+    const token = await User.accessTokens.create(user)
+
+    return response.redirect(`http://localhost:3000/login?token=${token}`)
+  }
+
+  private async findOrCreateUser(google) {
+    const userInfo = await google.user()
+
+    const existing = await User.findBy('email', userInfo.email)
+
+    if (existing) return existing
+
+    console.log(userInfo)
+
+    const user = new User()
+    user.email = userInfo.email
+    user.avatar = userInfo.avatarUrl
+    user.username = userInfo.name
+    user.provider = 'google'
+    await user.save()
+
+    return user
   }
 }
 

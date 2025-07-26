@@ -184,10 +184,8 @@ export default class UsersController {
     if (request.qs().size) {
       size = parseInt(request.qs().size)
     }
-
+    // check si l'avatar de l'url est le bon
     if (user.avatar === request.params().id_avatar) {
-      console.log(imageRoute)
-
       const buffer = await sharp(imageRoute + request.params().id_avatar).resize(size)
       return response.stream(buffer)
     } else {

@@ -126,7 +126,6 @@ export default class PlacesController {
     if (request.qs().size) {
       size = parseInt(request.qs().size)
     }
-    console.log(imageRoute + place.logo)
 
     if (place.logo) {
       const image = await sharp(imageRoute + place.logo).resize(size)
@@ -333,7 +332,6 @@ export default class PlacesController {
           // console.log(place)
         })
       })
-    console.log('b')
     return 'plop'
   }
 }
@@ -371,8 +369,6 @@ async function updateOSM(place: any, updateData: Array<any>) {
   }
 
   xmlData += `</node></osm>`
-
-  console.log(xmlData)
 
   await updateNode(place.osmId, changesetId, xmlData)
 

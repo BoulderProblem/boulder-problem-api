@@ -12,7 +12,7 @@ export default class extends BaseSchema {
       table.string('password').notNullable()
       table.string('avatar').nullable()
       table.string('bio').nullable()
-      table.date('birth_date').notNullable()
+      table.date('birth_date').nullable()
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()
     })

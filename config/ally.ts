@@ -5,7 +5,7 @@ const allyConfig = defineConfig({
   google: services.google({
     clientId: env.get('GOOGLE_CLIENT_ID'),
     clientSecret: env.get('GOOGLE_CLIENT_SECRET'),
-    callbackUrl: 'https://boulder-problem.chabs.fr/api/auth/google/callback',
+    callbackUrl: env.get('GOOGLE_CALLBACK_URL'),
   }),
 })
 

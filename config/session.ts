@@ -25,8 +25,8 @@ const sessionConfig = defineConfig({
   cookie: {
     path: '/',
     httpOnly: true,
-    secure: app.inProduction,
-    sameSite: 'lax',
+    secure: false,
+    sameSite: false,
   },
 
   /**
@@ -42,7 +42,7 @@ const sessionConfig = defineConfig({
    */
   stores: {
     cookie: stores.cookie(),
-  }
+  },
 })
 
 export default sessionConfig

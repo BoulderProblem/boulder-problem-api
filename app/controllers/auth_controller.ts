@@ -6,8 +6,16 @@ import { assert } from '../utils.js'
 import { loginValidator, lostPasswordValidator, resetPasswordValidator } from '#validators/auth'
 import mail from '@adonisjs/mail/services/main'
 import ResetPassword from '#models/reset_password'
-
+import { cuid } from '@adonisjs/core/helpers'
 import { DateTime, Interval } from 'luxon'
+import axios from 'axios'
+import fs from 'fs'
+import env from '#start/env'
+
+let imageRoute = `/home/node/app/build/uploads/users/`
+if (process.env.NODE_ENV !== 'production') {
+  imageRoute = `./uploads/users/`
+}
 
 export default class AuthController {
   /**
@@ -128,65 +136,88 @@ export default class AuthController {
     return ally.use('google').redirect()
   }
 
-  async callback({ ally, auth, response }: HttpContext) {
-    console.log('plop')
+  async callback({ ally, request, auth, response }: HttpContext) {
+    const code = request.input('code')
 
-    const google = ally.use('google')
-    console.log(google)
-
-    if (google.accessDenied()) {
-      console.log('Access denied')
-      return response.unauthorized('Access denied')
+    if (!code) {
+      return response.badRequest('Missing ?code param')
     }
 
-    if (google.stateMisMatch()) {
-      console.log('State mismatch')
-      return response.badRequest('State mismatch')
-    }
-
-    if (google.hasError()) {
-      console.log('Error during authentication')
-      console.log(google.getError())
-      return response.badRequest(google.getError())
-    }
-
-    console.log('➡️ Avant récupération du profil Google')
     try {
-      const user = await google.user()
-      console.log('✅ Utilisateur Google :', user)
+      // 1️⃣ Échanger le code contre un access token
+      const tokenRes = await axios.post('https://oauth2.googleapis.com/token', null, {
+        params: {
+          code,
+          client_id: env.get('GOOGLE_CLIENT_ID'),
+          client_secret: env.get('GOOGLE_CLIENT_SECRET'),
+          redirect_uri: env.get('GOOGLE_CALLBACK_URL'),
+          grant_type: 'authorization_code',
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      })
 
-      // suite logique...
-      return response.ok(user)
-    } catch (error) {
-      console.error('❌ Erreur google.user():', error)
-      return response.internalServerError('Erreur Google OAuth')
+      const { access_token, id_token } = tokenRes.data
+
+      // 2️⃣ Récupérer le profil utilisateur avec le token
+      const userRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      })
+
+      const genderRes = await axios.get(
+        'https://people.googleapis.com/v1/people/me?personFields=genders',
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      )
+      console.log(genderRes.data)
+      console.log('✅ Sexe:', genderRes.data)
+
+      const userGoogle = userRes.data
+
+      console.log('✅ Profil utilisateur Google :', userGoogle)
+      const userCreate = await findOrCreateUser(userGoogle)
+      const token = await User.accessTokens.create(userCreate)
+      console.log('token')
+      console.log(token)
+      console.log(token.value)
+
+      // return token
+      return response.redirect('http://localhost:3006/login?token=' + JSON.stringify(token))
+    } catch (err) {
+      console.error('❌ Erreur OAuth:', err.response?.data || err.message)
+      return response.internalServerError('OAuth error')
     }
-
-    const user = await this.findOrCreateUser(google)
-
-    const token = await User.accessTokens.create(user)
-
-    return response.redirect(`http://localhost:3000/login?token=${token}`)
   }
+}
 
-  private async findOrCreateUser(google) {
-    const userInfo = await google.user()
+async function findOrCreateUser(userGoogle: any) {
+  const existing = await User.findBy('email', userGoogle.email)
 
-    const existing = await User.findBy('email', userInfo.email)
+  if (existing) return existing
 
-    if (existing) return existing
+  console.log(userGoogle)
+  //save image
 
-    console.log(userInfo)
+  let avatar = `${cuid()}.jpg`
+  const response = await axios.get(userGoogle.picture, { responseType: 'arraybuffer' })
 
-    const user = new User()
-    user.email = userInfo.email
-    user.avatar = userInfo.avatarUrl
-    user.username = userInfo.name
-    user.provider = 'google'
-    await user.save()
+  await fs.writeFileSync(imageRoute + avatar, response.data)
 
-    return user
-  }
+  const user = new User()
+  user.email = userGoogle.email
+  user.avatar = avatar
+  user.firstname = userGoogle.given_name
+  user.lastname = userGoogle.family_name
+  user.password = cuid() // Set a random password
+  await user.save()
+
+  return user
 }
 
 async function deleteRequest(id: number) {

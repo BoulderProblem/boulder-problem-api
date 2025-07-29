@@ -188,7 +188,7 @@ export default class AuthController {
       console.log(token.value)
 
       // return token
-      return response.redirect('http://localhost:3006/login?token=' + JSON.stringify(token))
+      return response.redirect(env.get('URL') + '/login?token=' + JSON.stringify(token))
     } catch (err) {
       console.error('❌ Erreur OAuth:', err.response?.data || err.message)
       return response.internalServerError('OAuth error')

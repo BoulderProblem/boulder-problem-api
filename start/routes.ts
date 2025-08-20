@@ -21,6 +21,7 @@ import FeedController from '#controllers/feed_controller'
 import UsersController from '#controllers/users_controller'
 import AuthController from '#controllers/auth_controller'
 import PostsController from '#controllers/posts_controller'
+import ContestsController from '#controllers/contests_controller'
 
 // returns swagger in YAML
 router.get('/swagger', async () => {
@@ -145,6 +146,9 @@ router
   .get('/walls/:id', [WallsController, 'getWallId'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
+  .put('/walls/:id', [WallsController, 'updateWallId'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
   .get('/walls/:id/ways', [WallsController, 'getWallWays'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
@@ -178,4 +182,32 @@ router
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/difficulties', [DifficultiesController, 'getDifficulties'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+
+router
+  .post('/contests', [ContestsController, 'addContest'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/contests', [ContestsController, 'getContests'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/contests/:id', [ContestsController, 'getContest'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .put('/contests/:id', [ContestsController, 'updateContest'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
+  .post('/contests/:id/follow', [ContestsController, 'followContest'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/contests/:id/ways', [ContestsController, 'getContestWays'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .post('/contests/:id/ways/:wayId', [ContestsController, 'addWayToContest'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .delete('/contests/:id/ways/:wayId', [ContestsController, 'removeWayFromContest'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/contests/:id/stats', [ContestsController, 'getContestStats'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])

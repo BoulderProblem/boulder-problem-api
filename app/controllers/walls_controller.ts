@@ -1,6 +1,6 @@
 import Wall from '#models/wall'
 import Way from '#models/way'
-import { createWallValidator } from '#validators/wall'
+import { createWallValidator, updateWallValidator } from '#validators/wall'
 import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 
@@ -10,6 +10,20 @@ export default class WallsController {
 
     // save post
     return await Wall.create(payload)
+  }
+
+  async updateWallId({ request }: HttpContext) {
+    let payload = await request.validateUsing(updateWallValidator)
+    let wallId = request.params().id
+
+    // find wall
+    const wall = await Wall.findOrFail(wallId)
+
+    // update wall
+    wall.merge(payload)
+    await wall.save()
+
+    return wall
   }
 
   async getWallId({ request }: HttpContext) {

@@ -35,7 +35,7 @@ export default class UsersController {
   }
 
   async generate({ request }: HttpContext) {
-    let results
+    let results: any[] = []
     let url = 'https://randomuser.me/api/?nat=fr&results=1000'
 
     await nodeFetch(url)

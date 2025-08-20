@@ -9,3 +9,10 @@ export const createWallValidator = vine.compile(
     name: vine.string(),
   })
 )
+
+export const updateWallValidator = vine.compile(
+  vine.object({
+    zone_id: vine.any(),
+    name: vine.string(),
+  })
+)

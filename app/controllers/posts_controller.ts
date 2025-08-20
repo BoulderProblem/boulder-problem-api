@@ -6,8 +6,13 @@ import Like from '#models/like'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import { DateTime } from 'luxon'
-import fs from 'fs'
+import sharp from 'sharp'
 import Comment from '#models/comment'
+
+let imageRoute = `/home/node/app/build/uploads/posts/`
+if (process.env.NODE_ENV !== 'production') {
+  imageRoute = `./uploads/posts/`
+}
 
 export default class PostsController {
   /**
@@ -83,10 +88,14 @@ export default class PostsController {
    * @responseBody 401 - Wrong image name
    */
   async getImage({ request, response }: HttpContext) {
+    let size = 500
+    if (request.qs().size) {
+      size = parseInt(request.qs().size)
+    }
     let post = await Post.findOrFail(request.params().id)
     if (post.image.includes(request.params().id_image)) {
-      const image = fs.createReadStream('uploads/posts/' + request.params().id_image)
-      response.stream(image)
+      const buffer = await sharp(imageRoute + request.params().id_image).resize(size)
+      return response.stream(buffer)
     } else {
       response.status(422).send('Wrong image name')
       return

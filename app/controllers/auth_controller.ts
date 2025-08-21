@@ -183,9 +183,6 @@ export default class AuthController {
       console.log('✅ Profil utilisateur Google :', userGoogle)
       const userCreate = await findOrCreateUser(userGoogle)
       const token = await User.accessTokens.create(userCreate)
-      console.log('token')
-      console.log(token)
-      console.log(token.value)
 
       // return token
       return response.redirect(env.get('URL') + '/login?token=' + JSON.stringify(token))

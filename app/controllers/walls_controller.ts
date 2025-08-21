@@ -44,4 +44,16 @@ export default class WallsController {
       .orderBy('created_at', 'asc')
     return way
   }
+
+  async deleteWallId({ request }: HttpContext) {
+    let wallId = request.params().id
+
+    // find wall
+    const wall = await Wall.findOrFail(wallId)
+
+    // delete wall
+    await wall.delete()
+
+    return { deleted: true }
+  }
 }

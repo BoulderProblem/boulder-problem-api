@@ -149,6 +149,9 @@ router
   .put('/walls/:id', [WallsController, 'updateWallId'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
+  .delete('/walls/:id', [WallsController, 'deleteWallId'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
   .get('/walls/:id/ways', [WallsController, 'getWallWays'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 

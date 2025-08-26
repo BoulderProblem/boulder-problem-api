@@ -112,9 +112,12 @@ export default class PostsController {
     let user_id = auth.user.id
 
     return await Post.query()
-      .preload('user')
+      .preload('user', (profileQuery) => {
+        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+      })
       .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
+      .withCount('comments', (query) => query.count('*').as('comments_count'))
       .where('id', request.params().id)
   }
 
@@ -154,20 +157,42 @@ export default class PostsController {
       // create like
       await Like.create({ post_id, user_id })
       return await Post.query()
-        .preload('user')
+        .preload('user', (profileQuery) => {
+          profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+        })
         .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
+        .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
     } else {
       // unlike
       await Like.query().where('post_id', post_id).andWhere('user_id', user_id).delete()
 
       return await Post.query()
-        .preload('user')
+        .preload('user', (profileQuery) => {
+          profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+        })
         .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
+        .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
     }
+  }
+
+  /**
+   * @getComments
+   * @summary get post comments
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async getComments({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    const post = await Post.findOrFail(request.params().id)
+    return await Comment.query()
+      .where('post_id', post.id)
+      .preload('user', (profileQuery) => {
+        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+      })
+      .orderBy('created_at', 'desc')
   }
 
   /**
@@ -179,10 +204,44 @@ export default class PostsController {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createCommentValidator)
 
+    let post_id = request.params().id
+    let user_id = auth.user.id
+
     await Comment.create({
       user_id: auth.user.id,
       text: payload.text,
-      post_id: request.params().id,
+      post_id: post_id,
     })
+    return await Post.query()
+      .preload('user', (profileQuery) => {
+        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+      })
+      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+      .withCount('likes', (query) => query.count('*').as('likes_count'))
+      .withCount('comments', (query) => query.count('*').as('comments_count'))
+      .where('id', post_id)
+  }
+
+  async deleteComment({ auth, request, response }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    const comment = await Comment.findOrFail(request.params().id_comment)
+
+    const user_id = comment.user_id
+    const post_id = comment.post_id
+
+    if (auth.user.id === comment.user_id) {
+      await comment.delete()
+      return await Post.query()
+        .preload('user', (profileQuery) => {
+          profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+        })
+        .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+        .withCount('likes', (query) => query.count('*').as('likes_count'))
+        .withCount('comments', (query) => query.count('*').as('comments_count'))
+        .where('id', post_id)
+    } else {
+      response.status(401).send('Permission denied')
+      return
+    }
   }
 }

@@ -103,4 +103,20 @@ export default class ZonesController {
 
     return await Zone.findOrFail(request.params().id)
   }
+
+  async deleteZoneId({ request }: HttpContext) {
+    let zone = await Zone.findOrFail(request.params().id)
+
+    // delete old image
+    if (zone.image) {
+      fs.rmSync(imageRoute + zone.image)
+    }
+
+    // delete zone
+    await zone.delete()
+
+    return {
+      deleted: true,
+    }
+  }
 }

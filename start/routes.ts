@@ -91,7 +91,13 @@ router
   .get('/posts/:id/image/:id_image', [PostsController, 'getImage'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
+  .get('/posts/:id/comment', [PostsController, 'getComments'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
   .post('/posts/:id/comment', [PostsController, 'createComment'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .delete('/posts/:id/comment/:id_comment', [PostsController, 'deleteComment'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
@@ -131,6 +137,9 @@ router
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .put('/zones/:id', [ZonesController, 'updateZoneId'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
+  .delete('/zones/:id', [ZonesController, 'deleteZoneId'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
   .get('/zones/:id/plan', [ZonesController, 'getPlan'])

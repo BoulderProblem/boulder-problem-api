@@ -25,7 +25,9 @@ export default class FeedController {
     following_id.push(user_id)
 
     let posts = await Post.query()
-      .preload('user')
+      .preload('user', (profileQuery) => {
+        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+      })
       .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .withCount('comments', (query) => query.count('*').as('comments_count'))

@@ -177,7 +177,13 @@ router
   .delete('/ways/:id', [WaysController, 'disableWayId'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
+  .get('/ways/:id/comment', [WaysController, 'getWayComments'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
   .post('/ways/:id/comment', [WaysController, 'createWayComment'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .delete('/ways/:id/comment/:id_comment', [WaysController, 'deleteWayComment'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/ways/:id/note', [WaysController, 'createWayNote'])

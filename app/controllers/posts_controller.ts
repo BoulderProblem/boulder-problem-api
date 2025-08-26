@@ -207,21 +207,12 @@ export default class PostsController {
     let payload = await request.validateUsing(createCommentValidator)
 
     let post_id = request.params().id
-    let user_id = auth.user.id
 
-    await Comment.create({
+    return await Comment.create({
       user_id: auth.user.id,
       text: payload.text,
       post_id: post_id,
     })
-    return await Post.query()
-      .preload('user', (profileQuery) => {
-        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
-      })
-      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
-      .withCount('likes', (query) => query.count('*').as('likes_count'))
-      .withCount('comments', (query) => query.count('*').as('comments_count'))
-      .where('id', post_id)
   }
 
   async deleteComment({ auth, request, response }: HttpContext) {

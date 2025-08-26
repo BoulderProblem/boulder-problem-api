@@ -60,6 +60,15 @@ export default class WaysController {
       .firstOrFail()
   }
 
+  async getWayComments({ request }: HttpContext) {
+    return await CommentsWay.query()
+      .where('way_id', request.params().id)
+      .preload('user', (profileQuery) => {
+        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+      })
+      .orderBy('created_at', 'desc')
+  }
+
   async createWayComment({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createWayCommentValidator)
@@ -68,6 +77,15 @@ export default class WaysController {
       text: payload.text,
       way_id: request.params().id,
     })
+  }
+
+  async deleteWayComment({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    const comment = await CommentsWay.findOrFail(request.params().id_comment)
+    if (comment.user_id !== auth.user.id) {
+      throw new Error('You are not allowed to delete this comment')
+    }
+    await comment.delete()
   }
 
   async createWayNote({ auth, request }: HttpContext) {

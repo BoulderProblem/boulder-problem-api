@@ -164,6 +164,7 @@ export default class PostsController {
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
+        .first()
     } else {
       // unlike
       await Like.query().where('post_id', post_id).andWhere('user_id', user_id).delete()
@@ -176,6 +177,7 @@ export default class PostsController {
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
+        .first()
     }
   }
 

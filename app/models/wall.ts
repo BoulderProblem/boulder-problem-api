@@ -1,7 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
-import { type zoneId } from './zone.js'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import Zone, { type zoneId } from './zone.js'
 import { Opaque } from '@adonisjs/core/types/helpers'
+import { type BelongsTo } from '@adonisjs/lucid/types/relations'
 
 export type wallId = Opaque<'wallId', string>
 
@@ -10,10 +11,15 @@ export default class Wall extends BaseModel {
   declare id: wallId
 
   @column()
-  declare zone_id: zoneId
+  declare zoneId: zoneId
 
   @column()
   declare name: string
+
+  @belongsTo(() => Zone, {
+    foreignKey: 'zoneId',
+  })
+  declare zone: BelongsTo<typeof Zone>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

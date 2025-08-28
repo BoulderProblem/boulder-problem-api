@@ -11,6 +11,7 @@ export const createContestValidator = vine.compile(
         return !!user
       }),
     name: vine.string(),
+    description: vine.string(),
     start_date: vine.date({
       formats: ['YYYY/MM/DD', 'x'],
     }),
@@ -29,6 +30,7 @@ export const updateContestValidator = vine.compile(
         return !!user
       }),
     name: vine.string(),
+    description: vine.string(),
     status: vine.enum(['waiting', 'valid', 'cancelled'] as const),
     start_date: vine.date({
       formats: ['YYYY/MM/DD', 'x'],

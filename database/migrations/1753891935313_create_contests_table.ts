@@ -14,6 +14,7 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
         .notNullable()
       table.string('name')
+      table.string('description')
       table.string('status')
       table.timestamp('start_date')
       table.timestamp('end_date')

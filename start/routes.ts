@@ -209,16 +209,25 @@ router
   .get('/contests', [ContestsController, 'getContests'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
+  .get('/contests/mine', [ContestsController, 'getMine'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
   .get('/contests/:id', [ContestsController, 'getContest'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .put('/contests/:id', [ContestsController, 'updateContest'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
+  .delete('/contests/:id', [ContestsController, 'deleteContest'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
   .post('/contests/:id/follow', [ContestsController, 'followContest'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/contests/:id/ways', [ContestsController, 'getContestWays'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/contests/:id/users', [ContestsController, 'getContestUsers'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .post('/contests/:id/ways/:wayId', [ContestsController, 'addWayToContest'])

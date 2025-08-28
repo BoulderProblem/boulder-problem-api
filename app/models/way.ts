@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
-import { type wallId } from './wall.js'
+import Wall, { type wallId } from './wall.js'
 import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import Color from './color.js'
 import Difficulty from './difficulty.js'
@@ -41,6 +41,11 @@ export default class Way extends BaseModel {
     foreignKey: 'difficultyId',
   })
   declare difficulty: BelongsTo<typeof Difficulty>
+
+  @belongsTo(() => Wall, {
+    foreignKey: 'wallId',
+  })
+  declare wall: BelongsTo<typeof Wall>
 
   @hasOne(() => ValidWay, {
     foreignKey: 'wayId',

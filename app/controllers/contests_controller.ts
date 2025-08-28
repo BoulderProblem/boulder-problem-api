@@ -35,17 +35,31 @@ export default class ContestsController {
     return contest
   }
 
+  async getMine({ auth }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    return await Contest.query()
+      .where('userId', auth.user.id)
+      .withCount('follow', (query) => query.count('*').as('follow_count'))
+      .orderBy('createdAt', 'desc')
+  }
   /**
    * @getContests
    * @summary get all contests
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async getContests({ auth }: HttpContext) {
+  async getContests({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let page = request.only(['page']).page
+    if (!page) {
+      page = 1
+    }
     return await Contest.query()
+      .withCount('follow', (query) => query.count('*').as('follow_count'))
       .where('userId', auth.user.id)
       .orWhere('status', 'active')
+      .orWhere('status', 'stopped')
       .orderBy('createdAt', 'desc')
+      .paginate(page, 10)
   }
 
   async getContest({ auth, request }: HttpContext) {
@@ -53,6 +67,7 @@ export default class ContestsController {
     const contestId = request.params().id
     return await Contest.query()
       .where('userId', auth.user.id)
+      .withCount('follow', (query) => query.count('*').as('follow_count'))
       .andWhere('id', contestId)
       .firstOrFail()
   }
@@ -78,6 +93,22 @@ export default class ContestsController {
 
     await contest.save()
     return contest
+  }
+
+  /**
+   * @deleteContest
+   * @summary delete contest
+   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
+   */
+  async deleteContest({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    const contestId = request.params().id
+    const contest = await Contest.query()
+      .where('userId', auth.user.id)
+      .andWhere('id', contestId)
+      .firstOrFail()
+    await contest.delete()
+    return { success: true }
   }
 
   async followContest({ auth, request }: HttpContext) {
@@ -136,6 +167,13 @@ export default class ContestsController {
 
     // Fetch the ways associated with the contest
     const ways = await Way.query()
+      .preload('difficulty')
+      .preload('color')
+      .preload('wall', (wallQuery) => {
+        wallQuery.preload('zone', (zoneQuery) => {
+          zoneQuery.preload('place')
+        })
+      })
       .join('ways_contests', 'ways.id', 'ways_contests.way_id')
       .where('ways_contests.contest_id', contestId)
       .select('ways.*') // important pour éviter les colonnes en double
@@ -183,5 +221,22 @@ export default class ContestsController {
     await WaysContest.query().where('contest_id', contestId).andWhere('way_id', wayId).delete()
 
     return { success: true }
+  }
+
+  async getContestUsers({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    const contestId = request.params().id
+
+    // Check if the contest exists
+    await Contest.query().where('id', contestId).firstOrFail()
+
+    // Fetch the users associated with the contest
+    const users = await UsersContest.query()
+      .where('contest_id', contestId)
+      .preload('user', (userQuery) => {
+        userQuery.select('id', 'email', 'firstname', 'lastname', 'avatar')
+      })
+
+    return users.map((uc) => uc.user)
   }
 }

@@ -66,7 +66,6 @@ export default class ContestsController {
     assert(auth.user, 'kindly login')
     const contestId = request.params().id
     return await Contest.query()
-      .where('userId', auth.user.id)
       .withCount('follow', (query) => query.count('*').as('follow_count'))
       .andWhere('id', contestId)
       .firstOrFail()

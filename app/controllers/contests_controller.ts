@@ -122,7 +122,6 @@ export default class ContestsController {
       .where('userId', user_id)
       .andWhere('contestId', contestId)
 
-    console.log(follow)
     if (follow.length === 0) {
       await UsersContest.create({
         userId: user_id,

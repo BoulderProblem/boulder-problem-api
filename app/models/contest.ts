@@ -37,7 +37,7 @@ export default class Contest extends BaseModel {
   declare follow_count: number
 
   @hasMany(() => UsersContest, {
-    foreignKey: 'contest_id',
+    foreignKey: 'contestId',
     serializeAs: null,
   })
   declare follow: HasMany<typeof UsersContest>

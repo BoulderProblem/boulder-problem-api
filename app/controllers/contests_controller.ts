@@ -119,17 +119,18 @@ export default class ContestsController {
     const contest = await Contest.query().where('id', contestId).firstOrFail()
 
     let follow = await UsersContest.query()
-      .where('user_id', user_id)
-      .andWhere('contest_id', contestId)
+      .where('userId', user_id)
+      .andWhere('contestId', contestId)
 
+    console.log(follow)
     if (follow.length === 0) {
       await UsersContest.create({
-        user_id: user_id,
-        contest_id: contestId,
+        userId: user_id,
+        contestId: contestId,
       })
       return contest
     } else {
-      await UsersContest.query().where('user_id', user_id).andWhere('contest_id', contestId).delete
+      await UsersContest.query().where('userId', user_id).andWhere('contestId', contestId).delete()
       return contest
     }
   }

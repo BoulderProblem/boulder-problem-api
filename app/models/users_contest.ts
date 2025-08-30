@@ -12,7 +12,7 @@ export default class UsersContest extends BaseModel {
   declare userId: userId
 
   @column()
-  declare contest_id: contestId
+  declare contestId: contestId
 
   @belongsTo(() => User, {
     foreignKey: 'userId',

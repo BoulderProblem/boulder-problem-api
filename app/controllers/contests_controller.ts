@@ -56,7 +56,7 @@ export default class ContestsController {
     return await Contest.query()
       .withCount('follow', (query) => query.count('*').as('follow_count'))
       .where('userId', auth.user.id)
-      .orWhere('status', 'active')
+      .orWhere('status', 'Valid')
       .orWhere('status', 'stopped')
       .orderBy('createdAt', 'desc')
       .paginate(page, 10)

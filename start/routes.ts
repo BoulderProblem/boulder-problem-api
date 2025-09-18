@@ -126,6 +126,9 @@ router
   .get('/places/:id/zones', [PlacesController, 'getPlaceZones'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
+  .get('/places/:id/allways', [PlacesController, 'getPlaceAllways'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
   .post('/places/:id/favorite', [PlacesController, 'favoritePlace'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 

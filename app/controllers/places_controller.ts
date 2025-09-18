@@ -141,6 +141,17 @@ export default class PlacesController {
     return await Zone.query().where('place_id', request.params().id).orderBy('created_at', 'asc')
   }
 
+  async getPlaceAllways({ auth, request }: HttpContext) {
+    return await Zone.query()
+      .where('place_id', request.params().id)
+      .preload('walls', (wallQuery) => {
+        wallQuery.preload('ways', (wayQuery) => {
+          wayQuery.preload('difficulty').preload('color')
+        })
+      })
+      .orderBy('created_at', 'asc')
+  }
+
   async updatePlaceId({ auth, request }: HttpContext) {
     let payload = await request.validateUsing(updatePlaceValidator)
     let place = await Place.findOrFail(request.params().id)

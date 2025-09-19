@@ -68,6 +68,9 @@ router
 router
   .post('/users/:id/follow', [UsersController, 'followUser'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/users/:id/posts', [UsersController, 'getUserPosts'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .get('/posts', [PostsController, 'getPosts'])

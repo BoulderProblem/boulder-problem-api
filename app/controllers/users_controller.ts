@@ -11,6 +11,7 @@ import sharp from 'sharp'
 import axios from 'axios'
 import fs from 'fs'
 import path from 'path'
+import Post from '#models/post'
 
 let imageRoute = `/home/node/app/build/uploads/users/`
 if (process.env.NODE_ENV !== 'production') {
@@ -235,5 +236,18 @@ export default class UsersController {
         )
         .where('id', user_following_id)
     }
+  }
+
+  async getUserPosts({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
+    return await Post.query()
+      .preload('user', (profileQuery) => {
+        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+      })
+      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+      .withCount('likes', (query) => query.count('*').as('likes_count'))
+      .withCount('comments', (query) => query.count('*').as('comments_count'))
+      .where('user_id', user_id)
   }
 }

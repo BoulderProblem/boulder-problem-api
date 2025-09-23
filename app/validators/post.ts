@@ -31,3 +31,9 @@ export const createCommentValidator = vine.compile(
     text: vine.string(),
   })
 )
+
+export const favoritePostValidator = vine.compile(
+  vine.object({
+    favorite: vine.boolean(),
+  })
+)

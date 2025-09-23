@@ -13,6 +13,13 @@ export default class extends BaseSchema {
         .inTable('users')
         .onDelete('CASCADE')
         .notNullable()
+      table
+        .uuid('place_id')
+        .unsigned()
+        .references('id')
+        .inTable('places')
+        .onDelete('CASCADE')
+        .notNullable()
       table.string('name')
       table.string('description')
       table.string('status')

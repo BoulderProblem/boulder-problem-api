@@ -1,7 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import Post from '#models/post'
-import { createCommentValidator, createPostValidator, updatePostValidator } from '#validators/post'
+import {
+  createCommentValidator,
+  createPostValidator,
+  favoritePostValidator,
+  updatePostValidator,
+} from '#validators/post'
 import Like from '#models/like'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
@@ -145,6 +150,7 @@ export default class PostsController {
    */
   async likePost({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let payload = await request.validateUsing(favoritePostValidator)
     let post_id = request.params().id
     let user_id = auth.user.id
 
@@ -153,7 +159,7 @@ export default class PostsController {
 
     let like = await Like.query().where('post_id', post_id).andWhere('user_id', user_id)
 
-    if (like.length === 0) {
+    if (like.length === 0 && payload.favorite) {
       // create like
       await Like.create({ post_id, user_id })
       return await Post.query()
@@ -165,7 +171,8 @@ export default class PostsController {
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
         .first()
-    } else {
+    }
+    if (like.length === 1 && !payload.favorite) {
       // unlike
       await Like.query().where('post_id', post_id).andWhere('user_id', user_id).delete()
 

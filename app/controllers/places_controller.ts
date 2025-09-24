@@ -284,7 +284,7 @@ export default class PlacesController {
                 point.city = element['$'].v
               }
               if (element['$'].k === 'addr:postcode') {
-                point.postal_code = element['$'].v
+                point.postalCode = element['$'].v
               }
               if (element['$'].k === 'addr:housenumber') {
                 point.address = element['$'].v + ' '
@@ -296,20 +296,20 @@ export default class PlacesController {
                 point.outdoor = element['$'].v === 'yes'
               }
               if (element['$'].k === 'climbing:grade:french:max') {
-                point.grade_max = element['$'].v
+                point.gradeMax = element['$'].v
               }
               if (element['$'].k === 'climbing:grade:french:min') {
-                point.grade_min = element['$'].v
+                point.gradeMin = element['$'].v
               }
               if (element['$'].k === 'climbing:length') {
-                point.length_max = element['$'].v
-                point.length_min = element['$'].v
+                point.lengthMin = element['$'].v
+                point.lengthMax = element['$'].v
               }
               if (element['$'].k === 'climbing:length:max') {
-                point.length_max = element['$'].v
+                point.lengthMax = element['$'].v
               }
               if (element['$'].k === 'climbing:length:min') {
-                point.length_min = element['$'].v
+                point.lengthMin = element['$'].v
               }
               if (element['$'].k === 'climbing:routes') {
                 point.routes = element['$'].v

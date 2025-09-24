@@ -239,8 +239,7 @@ export default class UsersController {
   }
 
   async getUserPosts({ auth, request }: HttpContext) {
-    assert(auth.user, 'kindly login')
-    let user_id = auth.user.id
+    let user_id = request.params().id
     return await Post.query()
       .preload('user', (profileQuery) => {
         profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])

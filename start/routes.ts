@@ -242,5 +242,5 @@ router
   .delete('/contests/:id/ways/:wayId', [ContestsController, 'removeWayFromContest'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .get('/contests/:id/stats', [ContestsController, 'getContestStats'])
+  .get('/contests/:id/ranking', [ContestsController, 'getContestRanking'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])

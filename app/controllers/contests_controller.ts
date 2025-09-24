@@ -7,6 +7,7 @@ import { DateTime } from 'luxon'
 import UsersContest from '#models/users_contest'
 import Way from '#models/way'
 import WaysContest from '#models/ways_contest'
+import db from '@adonisjs/lucid/services/db'
 
 export default class ContestsController {
   /**
@@ -134,23 +135,40 @@ export default class ContestsController {
     }
   }
 
-  async getContestStats({ auth, request }: HttpContext) {
+  async getContestRanking({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     const contestId = request.params().id
 
     // Check if the contest exists
-    const contest = await Contest.query().where('id', contestId).firstOrFail()
-    let followers = await UsersContest.query()
-      .where('contest_id', contestId)
-      .count('* as count')
-      .first()
+    const scores = await db
+      .from('users_contests as uc')
+      .select('uc.contest_id', 'uc.user_id', 'u.firstname', 'u.lastname', 'u.avatar')
+      .sum(
+        db
+          .raw(
+            `
+          CASE vw.status
+            WHEN '1' THEN 1
+            WHEN '2' THEN 5
+            WHEN 'top' THEN 15
+            ELSE 0
+          END
+        `
+          )
+          .wrap('(', ')'),
+        'score'
+      )
+      .leftJoin('valid_ways as vw', 'vw.user_id', 'uc.user_id')
+      .leftJoin('users as u', 'u.id', 'uc.user_id')
+      .leftJoin('ways_contests as wc', function () {
+        this.on('wc.contest_id', '=', 'uc.contest_id').andOn('wc.way_id', '=', 'vw.way_id')
+      })
+      .where('uc.contest_id', contestId)
 
-    console.log(followers)
+      .groupBy('uc.contest_id', 'uc.user_id', 'u.firstname', 'u.lastname', 'u.avatar')
+      .orderBy('score', 'desc')
 
-    return {
-      contest,
-      followers: parseInt(followers?.$extras.count) || 0,
-    }
+    return scores
   }
   /**
    * @getContestWays

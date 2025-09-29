@@ -7,8 +7,12 @@ import { DateTime } from 'luxon'
 
 app.ready(() => {
   const io = new Server(server.getNodeServer(), {
+    path: '/api/socket.io',
     cors: {
-      origin: '*',
+      origin: [
+        'https://boulder-problem.chabs.fr',
+        'http://localhost:3333', // ton front dev
+      ],
     },
   })
   io?.on('connection', (socket) => {

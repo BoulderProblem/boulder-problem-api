@@ -15,7 +15,6 @@ app.ready(() => {
       ],
     },
   })
-  console.log(io)
 
   io?.on('connection', (socket) => {
     console.log('client connecté:', socket.id)
@@ -29,7 +28,6 @@ app.ready(() => {
     socket.on('message:send', async (message: any) => {
       try {
         // TODO: sauvegarde en BDD ici
-        console.log(message)
         const messageSave = await Message.create(message)
         // update conv
         let conv = await Conversation.findOrFail(message.conversationId)

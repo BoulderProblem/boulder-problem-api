@@ -22,6 +22,8 @@ import UsersController from '#controllers/users_controller'
 import AuthController from '#controllers/auth_controller'
 import PostsController from '#controllers/posts_controller'
 import ContestsController from '#controllers/contests_controller'
+import MessagesController from '#controllers/messages_controller'
+import KeyBackupsController from '#controllers/key_backup_controller'
 
 // returns swagger in YAML
 router.get('/swagger', async () => {
@@ -243,4 +245,25 @@ router
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/contests/:id/ranking', [ContestsController, 'getContestRanking'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+
+router
+  .get('/conversations', [MessagesController, 'getConversations'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .post('/conversations', [MessagesController, 'createConversations'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+
+router
+  .post('/messages', [MessagesController, 'store'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/messages', [MessagesController, 'index'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+
+router
+  .post('/backup-key', [KeyBackupsController, 'store'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/backup-key', [KeyBackupsController, 'show'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])

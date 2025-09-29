@@ -1,5 +1,4 @@
 import vine from '@vinejs/vine'
-import { stat } from 'fs'
 
 export const createContestValidator = vine.compile(
   vine.object({

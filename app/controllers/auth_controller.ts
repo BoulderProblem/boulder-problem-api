@@ -185,7 +185,9 @@ export default class AuthController {
       const token = await User.accessTokens.create(userCreate)
 
       // return token
-      return response.redirect(env.get('URL') + '/login?token=' + JSON.stringify(token))
+      return response.redirect(
+        env.get('URL') + '/login?token=' + JSON.stringify(token) + '&id=' + userGoogle.sub
+      )
     } catch (err) {
       console.error('❌ Erreur OAuth:', err.response?.data || err.message)
       return response.internalServerError('OAuth error')

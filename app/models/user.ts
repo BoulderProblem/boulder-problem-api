@@ -55,6 +55,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare genderId: number
 
+  @column()
+  declare publicKey: string
+
   public get nbFollower(): number {
     return Number(this.$extras.nb_follower ?? 0)
   }

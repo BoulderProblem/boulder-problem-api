@@ -10,7 +10,6 @@ import { DateTime } from 'luxon'
 import sharp from 'sharp'
 import axios from 'axios'
 import fs from 'fs'
-import path from 'path'
 import Post from '#models/post'
 
 let imageRoute = `/home/node/app/build/uploads/users/`
@@ -238,7 +237,7 @@ export default class UsersController {
     }
   }
 
-  async getUserPosts({ auth, request }: HttpContext) {
+  async getUserPosts({ request }: HttpContext) {
     let user_id = request.params().id
     return await Post.query()
       .preload('user', (profileQuery) => {

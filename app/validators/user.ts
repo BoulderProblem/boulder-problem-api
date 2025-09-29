@@ -21,6 +21,7 @@ export const createUserValidator = vine.compile(
     password: vine.string().trim().minLength(6),
     firstname: vine.string().trim().minLength(2),
     lastname: vine.string().trim().minLength(2),
+    publicKey: vine.string().optional(),
     birth_date: vine.date({
       formats: ['YYYY/MM/DD', 'x'],
     }),
@@ -48,6 +49,7 @@ export const updateUserValidator = vine.compile(
         extnames: ['jpg', 'png', 'jpeg', 'webp'],
       })
       .optional(),
+    publicKey: vine.string().optional(),
     bio: vine.string().optional(),
   })
 )

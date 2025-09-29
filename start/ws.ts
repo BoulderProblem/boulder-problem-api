@@ -7,7 +7,7 @@ import { DateTime } from 'luxon'
 
 app.ready(() => {
   const io = new Server(server.getNodeServer(), {
-    path: '/api/socket.io',
+    path: '/socket.io',
     cors: {
       origin: [
         'https://boulder-problem.chabs.fr',
@@ -15,6 +15,8 @@ app.ready(() => {
       ],
     },
   })
+  console.log(io)
+
   io?.on('connection', (socket) => {
     console.log('client connecté:', socket.id)
 

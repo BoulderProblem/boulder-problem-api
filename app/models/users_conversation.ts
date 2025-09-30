@@ -25,6 +25,9 @@ export default class UsersConversation extends BaseModel {
   declare user: BelongsTo<typeof User>
 
   @column.dateTime({ autoCreate: true })
+  declare lastReadAt: DateTime
+
+  @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })

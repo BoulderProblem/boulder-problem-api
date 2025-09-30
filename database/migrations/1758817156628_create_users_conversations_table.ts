@@ -20,6 +20,7 @@ export default class extends BaseSchema {
         .inTable('conversations')
         .onDelete('CASCADE')
         .notNullable()
+      table.timestamp('last_read_at')
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

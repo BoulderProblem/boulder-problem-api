@@ -17,12 +17,9 @@ app.ready(() => {
   })
 
   io?.on('connection', (socket) => {
-    console.log('client connecté:', socket.id)
-
     // le client doit s’authentifier ou envoyer son userId
     socket.on('join:user', (userId: string) => {
       socket.join(`user:${userId}`)
-      console.log(`Socket ${socket.id} a rejoint room user:${userId}`)
     })
 
     socket.on('message:send', async (message: any) => {

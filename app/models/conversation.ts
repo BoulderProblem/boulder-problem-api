@@ -28,6 +28,18 @@ export default class Conversation extends BaseModel {
   })
   declare messages: HasMany<typeof Message>
 
+  @hasMany(() => Message, {
+    foreignKey: 'conversationId',
+  })
+  declare latestMessage: HasMany<typeof Message>
+
+  @column({
+    serialize: (value: string) => {
+      return parseInt(value)
+    },
+  })
+  declare unread_messages: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

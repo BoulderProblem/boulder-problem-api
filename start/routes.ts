@@ -253,6 +253,12 @@ router
 router
   .post('/conversations', [MessagesController, 'createConversations'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/conversations/:id', [MessagesController, 'getConversationid'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .post('/conversations/:id/read', [MessagesController, 'getConversationidRead'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .post('/messages', [MessagesController, 'store'])

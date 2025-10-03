@@ -75,9 +75,6 @@ router
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
-  .get('/posts', [PostsController, 'getPosts'])
-  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
-router
   .post('/posts', [PostsController, 'addPosts'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
@@ -264,7 +261,7 @@ router
   .post('/messages', [MessagesController, 'store'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .get('/messages', [MessagesController, 'index'])
+  .get('/messages', [MessagesController, 'getMessages'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router

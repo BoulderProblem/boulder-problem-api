@@ -153,17 +153,33 @@ export default class MessagesController {
     return message
   }
 
-  async index({ auth, request }: HttpContext) {
+  async getMessages({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
-    const { convId } = request.qs()
+    let { convId, before } = request.qs()
+
     let messages: any[] = []
+
     if (convId) {
-      messages = await Message.query()
-        .where('conversationId', convId)
-        .andWhere('sender_id', user_id)
-        .orWhere('receiver_id', user_id)
-        .orderBy('created_at', 'asc')
+      if (before) {
+        messages = await Message.query()
+          .where('conversationId', convId)
+          .andWhere('createdAt', '<', before)
+          .andWhere((query) => {
+            query.where('senderId', user_id).orWhere('receiverId', user_id)
+          })
+          .orderBy('createdAt', 'desc')
+          .limit(100)
+        return messages
+      } else {
+        messages = await Message.query()
+          .where('conversationId', convId)
+          .andWhere((query) => {
+            query.where('senderId', user_id).orWhere('receiverId', user_id)
+          })
+          .orderBy('createdAt', 'desc')
+          .limit(100)
+      }
     }
     return messages
   }

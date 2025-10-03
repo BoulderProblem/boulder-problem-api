@@ -21,26 +21,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 export default class PostsController {
   /**
-   * @getPosts
-   * @summary get all user posts
-   * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
-   */
-  async getPosts({ auth, request }: HttpContext) {
-    assert(auth.user, 'kindly login')
-    let user_id = auth.user.id
-    let page = request.only(['page']).page
-    if (!page) {
-      page = 1
-    }
-    return await Post.query()
-      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
-      .withCount('likes', (query) => query.count('*').as('likes_count'))
-      .withCount('comments', (query) => query.count('*').as('comments_count'))
-      .where('user_id', user_id)
-      .paginate(page, 10)
-  }
-
-  /**
    * @addPosts
    * @summary add post
    * @requestBody {"foo": "bar"}

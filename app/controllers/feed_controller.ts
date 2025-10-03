@@ -26,7 +26,7 @@ export default class FeedController {
 
     let posts = await Post.query()
       .preload('user', (profileQuery) => {
-        profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+        profileQuery.select(['firstname', 'lastname', 'avatar'])
       })
       .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))

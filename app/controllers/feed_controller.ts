@@ -58,8 +58,18 @@ export default class FeedController {
 
 function transformPost(post: any) {
   // Accès aux attributs du modèle Lucid
-  const { user_id, title, image, text, createdAt, updatedAt, likes_count, comments_count, score } =
-    post.$attributes
+  const {
+    user_id,
+    title,
+    image,
+    text,
+    createdAt,
+    updatedAt,
+    likes_count,
+    comments_count,
+    is_like,
+    score,
+  } = post.$attributes
 
   // Si l'on veut aussi intégrer les données de l'utilisateur (comme le prénom et l'avatar)
   const user = post.$preloaded.user ? post.$preloaded.user : {}
@@ -72,8 +82,9 @@ function transformPost(post: any) {
     text,
     createdAt,
     updatedAt,
-    likes_count,
-    comments_count,
+    likesCount: parseInt(likes_count, 10),
+    commentsCount: parseInt(comments_count, 10),
+    isLike: is_like === 1,
     score,
     user: {
       id: user.id,

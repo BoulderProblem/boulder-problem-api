@@ -59,6 +59,7 @@ export default class FeedController {
 function transformPost(post: any) {
   // Accès aux attributs du modèle Lucid
   const {
+    id,
     user_id,
     title,
     image,
@@ -76,6 +77,7 @@ function transformPost(post: any) {
 
   // Format transformé que l'on retourne
   return {
+    id,
     user_id,
     title,
     image,

@@ -78,7 +78,7 @@ function transformPost(post: any) {
   // Format transformé que l'on retourne
   return {
     id,
-    user_id,
+    userId: user_id,
     title,
     image,
     text,

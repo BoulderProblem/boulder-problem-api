@@ -14,7 +14,7 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
         .notNullable()
       table
-        .uuid('place_id')
+        .integer('place_id')
         .unsigned()
         .references('id')
         .inTable('places')

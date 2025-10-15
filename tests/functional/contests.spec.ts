@@ -1,10 +1,13 @@
 import { test } from '@japa/runner'
 import { createAdminUser } from '#tests/helpers/create_user'
+import Place from '#models/place'
+import db from '@adonisjs/lucid/services/db'
 
 test.group('Contests', (group) => {
   let authToken: string
   let user: any
   let contestId: number
+  let placeId: number
 
   group.each.setup(async ({ context }) => {
     if (!authToken) {
@@ -20,13 +23,27 @@ test.group('Contests', (group) => {
   })
 
   test('should create a contest', async ({ client, assert }) => {
+    // Créer une place pour le test
+    const place = await Place.create({
+      coordinate: db.raw("point(48.8566, 2.3522)"),
+      geocoordinate: db.raw("ST_GeomFromText('POINT(2.3522 48.8566)', 4326)"),
+      osmId: 'test-contest-place',
+      sportCenter: true,
+      name: 'Test Climbing Gym',
+      city: 'Paris',
+      postalCode: '75001',
+      address: '1 Rue de Test, 75001 Paris',
+      outdoor: false,
+    })
+    placeId = place.id as unknown as number
+
     const response = await client.post('/contests').bearerToken(authToken).json({
       name: 'Test Contest',
       description: 'A test contest',
       start_date: '2025/08/12',
       end_date: '2025/11/12',
       user_id: user.id,
-      place_id: 1,
+      place_id: placeId,
     })
 
     response.assertStatus(200)

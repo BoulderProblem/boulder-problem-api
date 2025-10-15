@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
 
 jobs:
   test:
@@ -46,13 +46,13 @@ jobs:
           LOG_LEVEL=info
           APP_KEY=$(openssl rand -base64 32)
           NODE_ENV=test
-          
+
           DB_HOST=localhost
           DB_PORT=5432
           DB_USER=postgres
           DB_PASSWORD=postgres
           DB_DATABASE=boulder_test
-          
+
           SESSION_DRIVER=cookie
           BREVO_API_KEY=fake_key_for_tests
           EOF

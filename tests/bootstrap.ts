@@ -4,6 +4,7 @@ import app from '@adonisjs/core/services/app'
 import type { Config } from '@japa/runner/types'
 import { pluginAdonisJS } from '@japa/plugin-adonisjs'
 import testUtils from '@adonisjs/core/services/test_utils'
+import mail from '@adonisjs/mail/services/main'
 
 /**
  * This file is imported by the "bin/test.ts" entrypoint file
@@ -23,8 +24,18 @@ export const plugins: Config['plugins'] = [assert(), apiClient(), pluginAdonisJS
  * The teardown functions are executer after all the tests
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [],
-  teardown: [],
+  setup: [
+    () => {
+      // Enable fake mailer for all tests
+      mail.fake()
+    },
+  ],
+  teardown: [
+    () => {
+      // Restore mailer after all tests
+      mail.restore()
+    },
+  ],
 }
 
 /**

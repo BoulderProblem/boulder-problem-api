@@ -14,7 +14,6 @@ const mailConfig = defineConfig({
       key: env.get('BREVO_API_KEY'),
       baseUrl: 'https://api.brevo.com/v3',
     }),
-     
   },
 })
 

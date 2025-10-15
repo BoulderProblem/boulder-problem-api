@@ -90,16 +90,16 @@ router
   .post('/posts/:id/like', [PostsController, 'likePost'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .get('/posts/:id/image/:id_image', [PostsController, 'getImage'])
+  .get('/posts/:id/images/:id_image', [PostsController, 'getImage'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .get('/posts/:id/comment', [PostsController, 'getComments'])
+  .get('/posts/:id/comments', [PostsController, 'getComments'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .post('/posts/:id/comment', [PostsController, 'createComment'])
+  .post('/posts/:id/comments', [PostsController, 'createComment'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
-  .delete('/posts/:id/comment/:id_comment', [PostsController, 'deleteComment'])
+  .delete('/posts/:id/comments/:id_comment', [PostsController, 'deleteComment'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router

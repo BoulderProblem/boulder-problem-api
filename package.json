@@ -10,6 +10,11 @@
     "dev": "node ace serve --watch",
     "dev-ext": "PORT=3334 node ace serve --watch",
     "test": "node ace test",
+    "test:watch": "node ace test --watch",
+    "test:functional": "node ace test functional",
+    "test:unit": "node ace test unit",
+    "db:test:setup": "NODE_ENV=test node ace migration:run",
+    "db:test:reset": "NODE_ENV=test node ace migration:rollback && NODE_ENV=test node ace migration:run",
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"

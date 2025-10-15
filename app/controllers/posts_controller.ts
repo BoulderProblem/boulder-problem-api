@@ -80,6 +80,7 @@ export default class PostsController {
     let post = await Post.findOrFail(request.params().id)
     if (post.image.includes(request.params().id_image)) {
       const buffer = await sharp(imageRoute + request.params().id_image).resize(size)
+      response.header('Content-Type', 'image/' + request.params().id_image.split('.')[1])
       return response.stream(buffer)
     } else {
       response.status(422).send('Wrong image name')

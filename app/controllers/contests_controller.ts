@@ -27,7 +27,9 @@ export default class ContestsController {
     // save contest
     const contest = await Contest.create({
       userId: payload.user_id as userId,
+      placeId: payload.place_id,
       name: payload.name,
+      description: payload.description,
       status: 'waiting', // default status
       startDate: DateTime.fromJSDate(payload.start_date),
       endDate: DateTime.fromJSDate(payload.end_date),

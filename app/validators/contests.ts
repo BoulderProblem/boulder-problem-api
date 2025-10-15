@@ -11,6 +11,7 @@ export const createContestValidator = vine.compile(
       }),
     name: vine.string(),
     description: vine.string(),
+    place_id: vine.number(),
     start_date: vine.date({
       formats: ['YYYY/MM/DD', 'x'],
     }),

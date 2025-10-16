@@ -55,3 +55,9 @@ export const updateContestValidator = vine.compile(
     }),
   })
 )
+
+export const followContestValidator = vine.compile(
+  vine.object({
+    follow: vine.boolean(),
+  })
+)

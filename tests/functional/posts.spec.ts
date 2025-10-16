@@ -153,7 +153,7 @@ test.group('Posts', (group) => {
 
     // Then like it
     const response = await client.post(`/posts/${createdPostId}/like`).bearerToken(authToken).json({
-      favorite: true,
+      like: true,
     })
 
     response.assertStatus(200)
@@ -177,12 +177,12 @@ test.group('Posts', (group) => {
 
     // Like it first
     await client.post(`/posts/${createdPostId}/like`).bearerToken(authToken).json({
-      favorite: true,
+      like: true,
     })
 
     // Then unlike it
     const response = await client.post(`/posts/${createdPostId}/like`).bearerToken(authToken).json({
-      favorite: false,
+      like: false,
     })
 
     response.assertStatus(200)

@@ -24,6 +24,8 @@ export default class FeedController {
     let following_id = followingUsers.map((f: any) => f.user_following_id)
     following_id.push(user_id)
 
+    console.log(following_id)
+
     let posts = await Post.query()
       .preload('user', (profileQuery) => {
         profileQuery.select(['firstname', 'lastname', 'avatar'])

@@ -32,8 +32,8 @@ export const createCommentValidator = vine.compile(
   })
 )
 
-export const favoritePostValidator = vine.compile(
+export const likePostValidator = vine.compile(
   vine.object({
-    favorite: vine.boolean(),
+    like: vine.boolean(),
   })
 )

@@ -25,7 +25,7 @@ test.group('Contests', (group) => {
   test('should create a contest', async ({ client, assert }) => {
     // Créer une place pour le test
     const place = await Place.create({
-      coordinate: db.raw("point(48.8566, 2.3522)"),
+      coordinate: db.raw('point(48.8566, 2.3522)'),
       geocoordinate: db.raw("ST_GeomFromText('POINT(2.3522 48.8566)', 4326)"),
       osmId: 'test-contest-place',
       sportCenter: true,
@@ -80,7 +80,12 @@ test.group('Contests', (group) => {
   })
 
   test('should follow a contest', async ({ client }) => {
-    const response = await client.post(`/contests/${contestId}/follow`).bearerToken(authToken)
+    const response = await client
+      .post(`/contests/${contestId}/follow`)
+      .bearerToken(authToken)
+      .json({
+        follow: true,
+      })
 
     response.assertStatus(200)
   })

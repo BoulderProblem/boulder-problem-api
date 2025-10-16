@@ -4,7 +4,7 @@ import Post from '#models/post'
 import {
   createCommentValidator,
   createPostValidator,
-  favoritePostValidator,
+  likePostValidator,
   updatePostValidator,
 } from '#validators/post'
 import Like from '#models/like'
@@ -131,7 +131,7 @@ export default class PostsController {
    */
   async likePost({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
-    let payload = await request.validateUsing(favoritePostValidator)
+    let payload = await request.validateUsing(likePostValidator)
     let post_id = request.params().id
     let user_id = auth.user.id
 
@@ -140,7 +140,7 @@ export default class PostsController {
 
     let like = await Like.query().where('post_id', post_id).andWhere('user_id', user_id)
 
-    if (like.length === 0 && payload.favorite) {
+    if (like.length === 0 && payload.like) {
       // create like
       await Like.create({ post_id, user_id })
       return await Post.query()
@@ -152,7 +152,7 @@ export default class PostsController {
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
         .first()
-    } else if (like.length === 1 && !payload.favorite) {
+    } else if (like.length === 1 && !payload.like) {
       // unlike
       await Like.query().where('post_id', post_id).andWhere('user_id', user_id).delete()
 

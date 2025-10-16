@@ -80,7 +80,12 @@ test.group('Users', (group) => {
 
     const targetUserId = user.body().id
 
-    const response = await client.post(`/users/${targetUserId}/follow`).bearerToken(authToken)
+    const response = await client
+      .post(`/users/${targetUserId}/follow`)
+      .bearerToken(authToken)
+      .json({
+        follow: true,
+      })
 
     response.assertStatus(200)
   })

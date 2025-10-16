@@ -53,3 +53,9 @@ export const updateUserValidator = vine.compile(
     bio: vine.string().optional(),
   })
 )
+
+export const followUserValidator = vine.compile(
+  vine.object({
+    follow: vine.boolean(),
+  })
+)

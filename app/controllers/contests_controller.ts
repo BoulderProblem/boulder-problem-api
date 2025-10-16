@@ -1,7 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import Contest from '#models/contest'
-import { createContestValidator, updateContestValidator } from '#validators/contests'
+import {
+  createContestValidator,
+  followContestValidator,
+  updateContestValidator,
+} from '#validators/contests'
 import { DateTime } from 'luxon'
 import UsersContest from '#models/users_contest'
 import Way from '#models/way'
@@ -116,6 +120,7 @@ export default class ContestsController {
 
   async followContest({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let payload = await request.validateUsing(followContestValidator)
     const contestId = request.params().id
     let user_id = auth.user.id
 
@@ -126,14 +131,16 @@ export default class ContestsController {
       .where('userId', user_id)
       .andWhere('contestId', contestId)
 
-    if (follow.length === 0) {
+    if (follow.length === 0 && payload.follow) {
       await UsersContest.create({
         userId: user_id,
         contestId: contestId,
       })
       return contest
-    } else {
+    } else if (follow.length === 1 && !payload.follow) {
       await UsersContest.query().where('userId', user_id).andWhere('contestId', contestId).delete()
+      return contest
+    } else {
       return contest
     }
   }

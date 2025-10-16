@@ -2,7 +2,7 @@ import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import nodeFetch from 'node-fetch'
-import { createUserValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, followUserValidator, updateUserValidator } from '#validators/user'
 import Follow from '#models/follow'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
@@ -34,7 +34,7 @@ export default class UsersController {
     return token
   }
 
-  async generate({ request }: HttpContext) {
+  async generate({}: HttpContext) {
     let results: any[] = []
     let url = 'https://randomuser.me/api/?nat=fr&results=1000'
 
@@ -109,6 +109,9 @@ export default class UsersController {
     let user = await User.query()
       .withCount('followers', (query) => query.count('*').as('nb_follower'))
       .withCount('followings', (query) => query.count('*').as('nb_following'))
+      .withCount('followersMe', (query) =>
+        query.count('*').as('is_following').where('user_follower_id', user_id)
+      )
       .withCount('posts', (query) => query.count('*').as('nb_post'))
       .where('id', user_id)
       .first()
@@ -163,14 +166,7 @@ export default class UsersController {
   async getUserId({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
-    return await User.query()
-      .withCount('followers', (query) => query.count('*').as('nb_follower'))
-      .withCount('followings', (query) => query.count('*').as('nb_following'))
-      .withCount('followers', (query) =>
-        query.count('*').as('is_following').where('user_follower_id', user_id)
-      )
-      .where('id', request.params().id)
-      .first()
+    return returnUser(request.params().id, user_id)
   }
 
   /**
@@ -200,6 +196,7 @@ export default class UsersController {
    */
   async followUser({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    let payload = await request.validateUsing(followUserValidator)
     let user_following_id = request.params().id
     let user_follower_id = auth.user.id
 
@@ -210,30 +207,21 @@ export default class UsersController {
       .where('user_follower_id', user_follower_id)
       .andWhere('user_following_id', user_following_id)
 
-    if (follow.length === 0) {
+    if (follow.length === 0 && payload.follow) {
       // create like
       await Follow.create({ user_follower_id, user_following_id })
-      return await User.query()
-        .withCount('followers', (query) => query.count('*').as('nb_follower'))
-        .withCount('followings', (query) => query.count('*').as('nb_following'))
-        .withCount('followers', (query) =>
-          query.count('*').as('is_following').where('user_follower_id', user_follower_id)
-        )
-        .where('id', user_following_id)
-    } else {
+
+      return await returnUser(user_following_id, user_follower_id)
+    } else if (follow.length === 1 && !payload.follow) {
       // unlike
       await Follow.query()
         .where('user_follower_id', user_follower_id)
         .andWhere('user_following_id', user_following_id)
         .delete()
 
-      return await User.query()
-        .withCount('followers', (query) => query.count('*').as('nb_follower'))
-        .withCount('followings', (query) => query.count('*').as('nb_following'))
-        .withCount('followers', (query) =>
-          query.count('*').as('is_following').where('user_follower_id', user_follower_id)
-        )
-        .where('id', user_following_id)
+      return await returnUser(user_following_id, user_follower_id)
+    } else {
+      return await returnUser(user_following_id, user_follower_id)
     }
   }
 
@@ -254,4 +242,16 @@ export default class UsersController {
       .orderBy('createdAt', 'desc')
       .paginate(page, 10)
   }
+}
+
+async function returnUser(id: string, user_id: string) {
+  let user = await User.query()
+    .withCount('followers', (query) => query.count('*').as('nb_follower'))
+    .withCount('followings', (query) => query.count('*').as('nb_following'))
+    .withCount('followers', (query) =>
+      query.count('*').as('is_following').where('user_follower_id', user_id)
+    )
+    .where('id', id)
+    .first()
+  return user?.serializeWithExtras({ nbPost: false, nbFollower: true, nbFollowing: true })
 }

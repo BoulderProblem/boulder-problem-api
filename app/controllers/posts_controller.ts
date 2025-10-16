@@ -52,8 +52,8 @@ export default class PostsController {
   }
 
   /**
-   * @addPosts
-   * @summary add post
+   * @updatePosts
+   * @summary update post
    * @requestBody {"title": "title", "text": "coucou"}
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
@@ -152,11 +152,20 @@ export default class PostsController {
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
         .first()
-    }
-    if (like.length === 1 && !payload.favorite) {
+    } else if (like.length === 1 && !payload.favorite) {
       // unlike
       await Like.query().where('post_id', post_id).andWhere('user_id', user_id).delete()
 
+      return await Post.query()
+        .preload('user', (profileQuery) => {
+          profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
+        })
+        .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+        .withCount('likes', (query) => query.count('*').as('likes_count'))
+        .withCount('comments', (query) => query.count('*').as('comments_count'))
+        .where('id', post_id)
+        .first()
+    } else {
       return await Post.query()
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])

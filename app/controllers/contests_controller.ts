@@ -2,12 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import Contest from '#models/contest'
 import { createContestValidator, updateContestValidator } from '#validators/contests'
-import { userId } from '#models/user'
 import { DateTime } from 'luxon'
 import UsersContest from '#models/users_contest'
 import Way from '#models/way'
 import WaysContest from '#models/ways_contest'
 import db from '@adonisjs/lucid/services/db'
+import { userId } from '#models/user'
+import { placeId } from '#models/place'
 
 export default class ContestsController {
   /**
@@ -27,7 +28,7 @@ export default class ContestsController {
     // save contest
     const contest = await Contest.create({
       userId: payload.user_id as userId,
-      placeId: payload.place_id,
+      placeId: payload.place_id as unknown as placeId,
       name: payload.name,
       description: payload.description,
       status: 'waiting', // default status

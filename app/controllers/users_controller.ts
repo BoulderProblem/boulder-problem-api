@@ -237,14 +237,17 @@ export default class UsersController {
     }
   }
 
-  async getUserPosts({ request }: HttpContext) {
+  async getUserPosts({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
     let user_id = request.params().id
+    let id = auth.user.id
+
     let page = request.only(['page']).page
     if (!page) {
       page = 1
     }
     return await Post.query()
-      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .withCount('comments', (query) => query.count('*').as('comments_count'))
       .where('user_id', user_id)

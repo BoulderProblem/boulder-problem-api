@@ -6,7 +6,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import FavoritePlace from './favorite_place.js'
 import User, { type userId } from './user.js'
 
-export type placeId = Opaque<'placeId', string>
+export type placeId = Opaque<'placeId', number>
 
 export default class Place extends BaseModel {
   @column({ isPrimary: true })

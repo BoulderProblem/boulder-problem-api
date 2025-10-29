@@ -28,8 +28,10 @@ export default class WaysController {
     return await Way.query()
       .preload('difficulty')
       .preload('color')
+      .preload('notes', (query) => query.where('user_id', user_id).select('note'))
       .preload('valid', (query) => query.where('user_id', user_id))
-      .withCount('notes', (query) => query.avg('note').as('note'))
+      .withCount('comments', (query) => query.count('*').as('nbComments'))
+      .withCount('avgnotes', (q) => q.avg('note').as('avg_note'))
       .where('id', request.params().id)
       .first()
   }
@@ -61,28 +63,33 @@ export default class WaysController {
   }
 
   async getWayComments({ request }: HttpContext) {
+    let page = request.only(['page']).page
+    if (!page) {
+      page = 1
+    }
     return await CommentsWay.query()
       .where('way_id', request.params().id)
       .preload('user', (profileQuery) => {
         profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
       })
       .orderBy('created_at', 'desc')
+      .paginate(page, 10)
   }
 
   async createWayComment({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createWayCommentValidator)
     return await CommentsWay.create({
-      user_id: auth.user.id,
+      userId: auth.user.id,
       text: payload.text,
-      way_id: request.params().id,
+      wayId: request.params().id,
     })
   }
 
   async deleteWayComment({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     const comment = await CommentsWay.findOrFail(request.params().id_comment)
-    if (comment.user_id !== auth.user.id) {
+    if (comment.userId !== auth.user.id) {
       throw new Error('You are not allowed to delete this comment')
     }
     await comment.delete()
@@ -91,11 +98,27 @@ export default class WaysController {
   async createWayNote({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createWayNoteValidator)
-    return await NotesWay.create({
-      user_id: auth.user.id,
-      note: payload.note,
-      way_id: request.params().id,
-    })
+
+    // check if note already exists
+    let noteExist = await NotesWay.query()
+      .where('way_id', request.params().id)
+      .andWhere('user_id', auth.user.id)
+      .first()
+
+    // if exists, update note
+    if (noteExist) {
+      let note = await noteExist.merge({ ...payload }).save()
+      let avg = await NotesWay.query().where('way_id', request.params().id).avg('note').first()
+      return { note, avgNote: avg?.avgNote }
+    } else {
+      let note = await NotesWay.create({
+        user_id: auth.user.id,
+        note: payload.note,
+        way_id: request.params().id,
+      })
+      let avg = await NotesWay.query().where('way_id', request.params().id).avg('note').first()
+      return { note, avgNote: avg?.avgNote }
+    }
   }
 
   async createWayValid({ auth, request }: HttpContext) {

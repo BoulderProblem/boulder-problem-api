@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, computed, hasMany, hasOne } from '@adonisjs/lucid/orm'
 import Wall, { type wallId } from './wall.js'
 import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import Color from './color.js'
@@ -7,6 +7,7 @@ import Difficulty from './difficulty.js'
 import { Opaque } from '@adonisjs/core/types/helpers'
 import NotesWay from './notes_way.js'
 import ValidWay from './valid_way.js'
+import CommentsWay from './comments_way.js'
 
 export type wayId = Opaque<'wayId', string>
 
@@ -58,12 +59,36 @@ export default class Way extends BaseModel {
   })
   declare notes: HasMany<typeof NotesWay>
 
-  @column({
-    serialize: (value: string) => {
-      return parseFloat(parseFloat(value).toFixed(2))
-    },
+  @hasMany(() => NotesWay, {
+    foreignKey: 'wayId',
+    serializeAs: null,
   })
-  declare note: number
+  declare avgnotes: HasMany<typeof NotesWay>
+
+  @hasMany(() => CommentsWay, {
+    foreignKey: 'wayId',
+    serializeAs: null,
+  })
+  declare comments: HasMany<typeof CommentsWay>
+
+  @computed()
+  get avgNote() {
+    // $extras.avg_note contient la valeur renvoyée par SQL (souvent en string)
+    const raw = (this as any).$extras?.avg_note
+    if (raw === undefined || raw === null) return null
+    return Number(parseFloat(String(raw)).toFixed(2))
+  }
+
+  @computed()
+  get nbComments() {
+    const raw = (this as any).$extras?.nbComments
+    return raw === undefined ? 0 : Number(raw)
+  }
+
+  @computed()
+  get userNote() {
+    return this.notes?.[0] ?? null
+  }
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

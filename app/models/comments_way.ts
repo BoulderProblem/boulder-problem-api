@@ -9,15 +9,15 @@ export default class CommentsWay extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: userId
+  declare userId: userId
 
   @column()
-  declare way_id: wayId
+  declare wayId: wayId
 
   @column()
   declare text: string
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
   @column.dateTime({ autoCreate: true })

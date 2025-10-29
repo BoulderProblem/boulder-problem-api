@@ -30,6 +30,15 @@ export default class PostsController {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createPostValidator)
     let imageids: string[] = []
+    if (!payload.images) {
+      payload.images = []
+    }
+    if (payload.images.length === 0) {
+      payload.images = []
+    }
+    if (typeof payload.images === 'string') {
+      payload.images = [payload.images]
+    }
     for (const image of payload.images) {
       // create unique image name
       let imageName = `${cuid()}.${image.extname}`
@@ -186,12 +195,17 @@ export default class PostsController {
   async getComments({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     const post = await Post.findOrFail(request.params().id)
+    let page = request.only(['page']).page
+    if (!page) {
+      page = 1
+    }
     return await Comment.query()
       .where('post_id', post.id)
       .preload('user', (profileQuery) => {
         profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
       })
       .orderBy('created_at', 'desc')
+      .paginate(page, 10)
   }
 
   /**

@@ -6,12 +6,14 @@ import vine from '@vinejs/vine'
 export const createPostValidator = vine.compile(
   vine.object({
     title: vine.string(),
-    images: vine.array(
-      vine.file({
-        size: '2mb',
-        extnames: ['jpg', 'png'],
+    images: vine
+      .any()
+      .transform((value) => {
+        if (!value) return []
+        if (Array.isArray(value)) return value
+        return [value]
       })
-    ),
+      .optional(),
     text: vine.string(),
   })
 )

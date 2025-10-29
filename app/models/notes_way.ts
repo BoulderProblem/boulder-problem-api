@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, computed } from '@adonisjs/lucid/orm'
 import { type userId } from './user.js'
 import { type wayId } from './way.js'
 
@@ -20,4 +20,11 @@ export default class NotesWay extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @computed()
+  get avgNote() {
+    // $extras.avg_note contient la valeur renvoyée par SQL (souvent en string)
+    const raw = (this as any).$extras?.avg
+    if (raw !== undefined && raw !== null) return Number(parseFloat(String(raw)).toFixed(2))
+  }
 }

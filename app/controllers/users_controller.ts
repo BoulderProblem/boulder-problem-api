@@ -251,7 +251,8 @@ async function returnUser(id: string, user_id: string) {
     .withCount('followers', (query) =>
       query.count('*').as('is_following').where('user_follower_id', user_id)
     )
+    .withCount('posts', (query) => query.count('*').as('nb_post'))
     .where('id', id)
     .first()
-  return user?.serializeWithExtras({ nbPost: false, nbFollower: true, nbFollowing: true })
+  return user?.serializeWithExtras({ nbPost: true, nbFollower: true, nbFollowing: true })
 }

@@ -32,7 +32,7 @@ export const createWayCommentValidator = vine.compile(
 
 export const createWayNoteValidator = vine.compile(
   vine.object({
-    note: vine.number().min(0).max(5).decimal(1),
+    note: vine.number().min(0).max(5),
   })
 )
 

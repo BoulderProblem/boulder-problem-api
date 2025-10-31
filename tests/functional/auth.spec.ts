@@ -81,7 +81,7 @@ test.group('Auth - Registration & Login', () => {
       genderId: 1,
     })
 
-    const response = await client.post('/password_lost').json({ email })
+    const response = await client.post('/forgot_password').json({ email })
 
     response.assertStatus(200)
     // Email is sent in fake mode (no actual email sent during tests)

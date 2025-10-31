@@ -11,6 +11,7 @@ import { DateTime, Interval } from 'luxon'
 import axios from 'axios'
 import fs from 'fs'
 import env from '#start/env'
+import ResetPasswordMailer from '../mailers/resetPassword.js'
 
 let imageRoute = `/home/node/app/build/uploads/users/`
 if (process.env.NODE_ENV !== 'production') {
@@ -50,13 +51,13 @@ export default class AuthController {
   }
 
   /**
-   * @passwordLost
+   * @forgotPassword
    * @summary ask password lost return code by email
    * @requestBody {"email": "test@test.fr"}
    * @responseBody 200 - {"email send": true}
    * @returns
    */
-  async passwordLost({ request }: HttpContext) {
+  async forgotPassword({ request }: HttpContext) {
     const payload = await request.validateUsing(lostPasswordValidator)
     const user = await User.query().where('email', payload.email)
     const oldReset = await ResetPassword.query().where('email', payload.email)
@@ -64,16 +65,19 @@ export default class AuthController {
     let code = Math.floor(100000 + Math.random() * 900000)
 
     if (user.length === 1) {
-      let email = await mail.send((message) => {
-        message
-          .to('alexandrechabane72@gmail.com')
-          .from('boulderproblem@chabs.fr')
-          .subject('Verify your email address')
-          .htmlView('emails/reset_password', {
-            title: 'Boulder Problem',
-            code: code.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '),
-          })
-      })
+      // let email = await mail.send((message) => {
+      //   message
+      //     .to('alexandrechabane72@gmail.com')
+      //     .from('boulderproblem@chabs.fr')
+      //     .subject('Code de réinitialisation de mot de passe')
+      //     .template('2', {
+      //       firstname: '',
+      //       reset_code: code.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '),
+      //     })
+      // })
+      // console.log(email)
+      await new ResetPasswordMailer(user[0].email, user[0].firstname, code.toString()).sendNow()
+
       // delete old reset
       if (oldReset.length === 1) {
         const reset = await ResetPassword.findOrFail(oldReset[0].id)
@@ -106,7 +110,7 @@ export default class AuthController {
           Interval.fromDateTimes(
             DateTime.fromISO(reset[0].createdAt.toString()),
             DateTime.now()
-          ).length('minutes') < 5
+          ).length('minutes') < 15
         ) {
           // reset password
           const user = await User.query().where('email', payload.email)

@@ -45,7 +45,7 @@ router.post('/register', [UsersController, 'register'])
 router.get('/auth/google/redirect', [AuthController, 'redirect'])
 router.get('/auth/google/callback', [AuthController, 'callback'])
 router.post('/login', [AuthController, 'login'])
-router.post('/password_lost', [AuthController, 'passwordLost'])
+router.post('/forgot_password', [AuthController, 'forgotPassword'])
 router.post('/reset_password', [AuthController, 'resetPassword'])
 router.get('/logout', [AuthController, 'logout']).use(middleware.auth())
 

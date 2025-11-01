@@ -72,6 +72,7 @@
     "edge-iconify": "^2.0.1",
     "edge.js": "^6.0.1",
     "knex-postgis": "^0.14.3",
+    "libsodium-wrappers-sumo": "^0.7.15",
     "luxon": "^3.4.4",
     "node-fetch": "^3.3.2",
     "pg": "^8.11.3",

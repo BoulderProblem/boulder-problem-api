@@ -5,6 +5,7 @@ import { createConversationValidator } from '#validators/message'
 import Conversation from '#models/conversation'
 import UsersConversation from '#models/users_conversation'
 import { DateTime } from 'luxon'
+import db from '@adonisjs/lucid/services/db'
 
 export default class MessagesController {
   async createConversations({ auth, request }: HttpContext) {
@@ -12,31 +13,55 @@ export default class MessagesController {
     let payload = await request.validateUsing(createConversationValidator)
     let user_id = auth.user.id
     if (payload.userIds.includes(user_id)) {
-      const conv = await Conversation.create({ name: payload.name || '', creatorId: user_id })
+      console.log(payload.userIds)
 
-      for (let id of payload.userIds) {
-        await UsersConversation.create({ userId: id, conversationId: conv.id })
+      const existing = await db
+        .from('users_conversations as uc')
+        .select('uc.conversation_id')
+        .whereIn('uc.user_id', payload.userIds)
+        .groupBy('uc.conversation_id')
+        // Vérifie que tous les userIds sont présents
+        .havingRaw('COUNT(DISTINCT uc.user_id) = ?', [payload.userIds.length])
+        // Vérifie qu'il n'y a pas d'autres users dans la même conversation
+        .havingRaw(
+          `
+      COUNT(DISTINCT uc.user_id) = (
+        SELECT COUNT(*) FROM users_conversations uc2 
+        WHERE uc2.conversation_id = uc.conversation_id
+      )
+    `
+        )
+        .first()
+
+      if (existing) {
+        return existing
+      } else {
+        const conv = await Conversation.create({ name: payload.name || '', creatorId: user_id })
+
+        for (let id of payload.userIds) {
+          await UsersConversation.create({ userId: id, conversationId: conv.id })
+        }
+
+        return await Conversation.query()
+          .preload('usersConversation', (usersConversation) => {
+            usersConversation.preload('user', (query) => {
+              query.select('id', 'firstname', 'lastname', 'publicKey') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+            })
+          })
+          .preload('messages', (query) => {
+            query
+              .where('senderId', user_id)
+              .orWhere('receiverId', user_id)
+              .orderBy('createdAt', 'desc')
+              .limit(1)
+          })
+          .where('id', conv.id)
+          .andWhere((query) => {
+            query.where('creatorId', user_id).orWhereHas('messages', (q2) => {
+              q2.where('senderId', user_id).orWhere('receiverId', user_id)
+            })
+          })
       }
-
-      return await Conversation.query()
-        .preload('usersConversation', (usersConversation) => {
-          usersConversation.preload('user', (query) => {
-            query.select('id', 'firstname', 'lastname', 'publicKey') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
-          })
-        })
-        .preload('messages', (query) => {
-          query
-            .where('senderId', user_id)
-            .orWhere('receiverId', user_id)
-            .orderBy('createdAt', 'desc')
-            .limit(1)
-        })
-        .where('id', conv.id)
-        .andWhere((query) => {
-          query.where('creatorId', user_id).orWhereHas('messages', (q2) => {
-            q2.where('senderId', user_id).orWhere('receiverId', user_id)
-          })
-        })
     } else {
       return
     }

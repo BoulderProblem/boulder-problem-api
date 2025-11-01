@@ -23,7 +23,6 @@ import AuthController from '#controllers/auth_controller'
 import PostsController from '#controllers/posts_controller'
 import ContestsController from '#controllers/contests_controller'
 import MessagesController from '#controllers/messages_controller'
-import KeyBackupsController from '#controllers/key_backup_controller'
 
 // returns swagger in YAML
 router.get('/swagger', async () => {
@@ -41,13 +40,20 @@ router.get('/', async () => {
   }
 })
 router.get('/generate', [UsersController, 'generate'])
-router.post('/register', [UsersController, 'register'])
+router.post('/register', [AuthController, 'register'])
 router.get('/auth/google/redirect', [AuthController, 'redirect'])
 router.get('/auth/google/callback', [AuthController, 'callback'])
 router.post('/login', [AuthController, 'login'])
+router.get('/srv_key', [AuthController, 'srvKey'])
 router.post('/forgot_password', [AuthController, 'forgotPassword'])
 router.post('/reset_password', [AuthController, 'resetPassword'])
 router.get('/logout', [AuthController, 'logout']).use(middleware.auth())
+router
+  .post('/backup_key', [AuthController, 'storePrivateKey'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
+  .get('/backup_key', [AuthController, 'showPrivateKey'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 
 router
   .get('/stats', [StatsController, 'getStats'])
@@ -262,11 +268,4 @@ router
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router
   .get('/messages', [MessagesController, 'getMessages'])
-  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
-
-router
-  .post('/backup-key', [KeyBackupsController, 'store'])
-  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
-router
-  .get('/backup-key', [KeyBackupsController, 'show'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])

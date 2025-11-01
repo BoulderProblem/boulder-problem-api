@@ -18,6 +18,15 @@ export default class KeyBackups extends BaseModel {
   @column()
   declare salt: string
 
+  @column()
+  declare ciphertext_srv: string
+
+  @column()
+  declare nonce_srv: string
+
+  @column()
+  declare salt_srv: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

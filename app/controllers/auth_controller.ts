@@ -1,10 +1,7 @@
-// import type { HttpContext } from '@adonisjs/core/http'
-
 import User from '#models/user'
 import { HttpContext } from '@adonisjs/core/http'
-import { assert } from '../utils.js'
+import { assert, decryptPrivateKey, encryptPrivateKey } from '../utils.js'
 import { loginValidator, lostPasswordValidator, resetPasswordValidator } from '#validators/auth'
-import mail from '@adonisjs/mail/services/main'
 import ResetPassword from '#models/reset_password'
 import { cuid } from '@adonisjs/core/helpers'
 import { DateTime, Interval } from 'luxon'
@@ -12,6 +9,8 @@ import axios from 'axios'
 import fs from 'fs'
 import env from '#start/env'
 import ResetPasswordMailer from '../mailers/resetPassword.js'
+import { createUserValidator } from '#validators/user'
+import KeyBackups from '#models/key_backups'
 
 let imageRoute = `/home/node/app/build/uploads/users/`
 if (process.env.NODE_ENV !== 'production') {
@@ -19,6 +18,25 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export default class AuthController {
+  /**
+   * @register
+   * @summary create user
+   * @requestBody {"email": "test@test.fr", "password": "test", "firstname": "Alexandre", "lastname": "Chabane", "birth_date": "1995/06/28", "genderId": "1"}
+   * @responseBody 200 - {"token": "oat_MTk.cVNCck0yZDEzRnVwc0p4MHZFaDhUTEVGOU5feUIyR0pERS04MUw0UTM5MjQ4NjI0Nzk"}
+   */
+  async register({ request }: HttpContext) {
+    let payload = await request.validateUsing(createUserValidator)
+
+    const user = await User.create(payload)
+
+    const token = await User.accessTokens.create(user)
+
+    return {
+      ...token.toJSON(),
+      pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
+    }
+  }
+
   /**
    * @login
    * @summary login user
@@ -32,7 +50,10 @@ export default class AuthController {
 
     const token = await User.accessTokens.create(user)
 
-    return token
+    return {
+      ...token.toJSON(),
+      pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
+    }
   }
 
   /**
@@ -47,6 +68,12 @@ export default class AuthController {
     await User.accessTokens.delete(auth.user, auth.user.currentAccessToken.identifier)
     return {
       revoked: true,
+    }
+  }
+
+  async srvKey({}: HttpContext) {
+    return {
+      pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
     }
   }
 
@@ -65,17 +92,6 @@ export default class AuthController {
     let code = Math.floor(100000 + Math.random() * 900000)
 
     if (user.length === 1) {
-      // let email = await mail.send((message) => {
-      //   message
-      //     .to('alexandrechabane72@gmail.com')
-      //     .from('boulderproblem@chabs.fr')
-      //     .subject('Code de réinitialisation de mot de passe')
-      //     .template('2', {
-      //       firstname: '',
-      //       reset_code: code.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '),
-      //     })
-      // })
-      // console.log(email)
       await new ResetPasswordMailer(user[0].email, user[0].firstname, code.toString()).sendNow()
 
       // delete old reset
@@ -117,6 +133,29 @@ export default class AuthController {
           await user[0].merge({ ...{ password: payload.password } }).save()
 
           deleteRequest(reset[0].id)
+
+          // change encrypt key for user key backup
+          const backup = await KeyBackups.query().where('user_id', user[0].id).first()
+          if (backup) {
+            let key = {
+              ciphertext: backup.ciphertext_srv,
+              nonce: backup.nonce_srv,
+              salt: backup.salt_srv,
+            }
+            let userPriv = await decryptPrivateKey(
+              key,
+              env.get('SERVER_MASTER_PRIVATE_KEY') as string
+            )
+
+            // re-encrypt with user password
+            const newKey = await encryptPrivateKey(userPriv, payload.password)
+
+            await KeyBackups.query().where('user_id', user[0].id).update({
+              ciphertext: newKey.ciphertext,
+              nonce: newKey.nonce,
+              salt: newKey.salt,
+            })
+          }
           return {
             password_reset: true,
           }
@@ -197,6 +236,41 @@ export default class AuthController {
       return response.internalServerError('OAuth error')
     }
   }
+
+  async storePrivateKey({ request, auth }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
+
+    const data = request.only(['priv', 'privSrv', 'pub'])
+
+    // save public key
+    let user = await User.findOrFail(user_id)
+    await user.merge({ ...{ publicKey: data.pub } }).save()
+
+    // save private key
+    await KeyBackups.updateOrCreate(
+      { userId: auth.user!.id },
+      {
+        ciphertext: data.priv.ciphertext,
+        nonce: data.priv.nonce,
+        salt: data.priv.salt,
+        ciphertext_srv: data.privSrv.ciphertext,
+        nonce_srv: data.privSrv.nonce,
+        salt_srv: data.privSrv.salt,
+        userId: auth.user!.id,
+      }
+    )
+    return { save: true }
+  }
+
+  async showPrivateKey({ auth }: HttpContext) {
+    const backup = await KeyBackups.query()
+      .where('user_id', auth.user!.id)
+      .select('ciphertext', 'nonce', 'salt')
+      .first()
+
+    return backup
+  }
 }
 
 async function findOrCreateUser(userGoogle: any) {
@@ -204,7 +278,6 @@ async function findOrCreateUser(userGoogle: any) {
 
   if (existing) return existing
 
-  console.log(userGoogle)
   //save image
 
   let avatar = `${cuid()}.jpg`
@@ -222,7 +295,6 @@ async function findOrCreateUser(userGoogle: any) {
 
   return user
 }
-
 async function deleteRequest(id: number) {
   const post = await ResetPassword.findOrFail(id)
   await post.delete()

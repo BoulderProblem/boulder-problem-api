@@ -2,7 +2,7 @@ import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import { assert } from '../utils.js'
 import nodeFetch from 'node-fetch'
-import { createUserValidator, followUserValidator, updateUserValidator } from '#validators/user'
+import { followUserValidator, updateUserValidator } from '#validators/user'
 import Follow from '#models/follow'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
@@ -18,22 +18,6 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export default class UsersController {
-  /**
-   * @register
-   * @summary create user
-   * @requestBody {"email": "test@test.fr", "password": "test", "firstname": "Alexandre", "lastname": "Chabane", "birth_date": "1995/06/28", "genderId": "1"}
-   * @responseBody 200 - {"token": "oat_MTk.cVNCck0yZDEzRnVwc0p4MHZFaDhUTEVGOU5feUIyR0pERS04MUw0UTM5MjQ4NjI0Nzk"}
-   */
-  async register({ request }: HttpContext) {
-    let payload = await request.validateUsing(createUserValidator)
-
-    const user = await User.create(payload)
-
-    const token = await User.accessTokens.create(user)
-
-    return token
-  }
-
   async generate({}: HttpContext) {
     let results: any[] = []
     let url = 'https://randomuser.me/api/?nat=fr&results=1000'

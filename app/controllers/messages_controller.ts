@@ -13,8 +13,6 @@ export default class MessagesController {
     let payload = await request.validateUsing(createConversationValidator)
     let user_id = auth.user.id
     if (payload.userIds.includes(user_id)) {
-      console.log(payload.userIds)
-
       const existing = await db
         .from('users_conversations as uc')
         .select('uc.conversation_id')

@@ -242,6 +242,7 @@ export default class PlacesController {
       )
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
       .where('id', place_id)
+      .first()
   }
 
   /**

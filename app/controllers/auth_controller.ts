@@ -34,6 +34,7 @@ export default class AuthController {
     return {
       ...token.toJSON(),
       pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
+      userId: user.id,
     }
   }
 
@@ -53,6 +54,7 @@ export default class AuthController {
     return {
       ...token.toJSON(),
       pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
+      userId: user.id,
     }
   }
 

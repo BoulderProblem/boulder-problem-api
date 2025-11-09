@@ -85,6 +85,22 @@ export default class PlacesController {
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
       .where('ownerId', user_id)
   }
+
+  async getFavorites({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_id = auth.user.id
+    return await Place.query()
+      .preload('owner', (query) => {
+        query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+      })
+      .withCount('favorite', (query) =>
+        query.count('*').as('is_favorite').where('user_id', user_id)
+      )
+      .withCount('favorite', (query) => query.count('*').as('favorite_count'))
+      .whereHas('favorite', (query) => {
+        query.where('user_id', user_id) // Utilisez 'user_id' au lieu de 'userId'
+      })
+  }
   /**
    * @getPlaceId
    * @summary get specific place

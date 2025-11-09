@@ -122,6 +122,9 @@ router
   .get('/places/mine', [PlacesController, 'getMine'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
+  .get('/places/favorite', [PlacesController, 'getFavorites'])
+  .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
+router
   .get('/places/:id', [PlacesController, 'getPlaceId'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router

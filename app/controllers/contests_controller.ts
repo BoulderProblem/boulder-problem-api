@@ -173,8 +173,9 @@ export default class ContestsController {
       .leftJoin('ways_contests as wc', function () {
         this.on('wc.contest_id', '=', 'uc.contest_id').andOn('wc.way_id', '=', 'vw.way_id')
       })
+      .leftJoin('contests as c', 'c.id', 'uc.contest_id')
       .where('uc.contest_id', contestId)
-
+      .andWhereBetween('vw.updated_at', [db.ref('c.start_date'), db.ref('c.end_date')])
       .groupBy('uc.contest_id', 'uc.user_id', 'u.firstname', 'u.lastname', 'u.avatar')
       .orderBy('score', 'desc')
 

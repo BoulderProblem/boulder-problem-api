@@ -1,11 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Way from '#models/way'
 import {
-  createWayCommentValidator,
-  createWayNoteValidator,
+  commentWayValidator,
   createWayValidator,
-  createWayValidValidator,
+  noteWayValidator,
   updateWayValidator,
+  validWayValidator,
 } from '#validators/way'
 import { DateTime } from 'luxon'
 import { assert } from '../utils.js'
@@ -78,7 +78,7 @@ export default class WaysController {
 
   async createWayComment({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
-    let payload = await request.validateUsing(createWayCommentValidator)
+    let payload = await request.validateUsing(commentWayValidator)
     return await CommentsWay.create({
       userId: auth.user.id,
       text: payload.text,
@@ -97,7 +97,7 @@ export default class WaysController {
 
   async createWayNote({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
-    let payload = await request.validateUsing(createWayNoteValidator)
+    let payload = await request.validateUsing(noteWayValidator)
 
     // check if note already exists
     let noteExist = await NotesWay.query()
@@ -123,7 +123,7 @@ export default class WaysController {
 
   async createWayValid({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
-    let payload = await request.validateUsing(createWayValidValidator)
+    let payload = await request.validateUsing(validWayValidator)
 
     let validExist = await ValidWay.query()
       .where('wayId', request.params().id)

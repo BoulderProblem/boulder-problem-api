@@ -24,19 +24,19 @@ export const updateWayValidator = vine.compile(
   })
 )
 
-export const createWayCommentValidator = vine.compile(
+export const commentWayValidator = vine.compile(
   vine.object({
     text: vine.string(),
   })
 )
 
-export const createWayNoteValidator = vine.compile(
+export const noteWayValidator = vine.compile(
   vine.object({
     note: vine.number().min(0).max(5),
   })
 )
 
-export const createWayValidValidator = vine.compile(
+export const validWayValidator = vine.compile(
   vine.object({
     status: vine.string(),
   })

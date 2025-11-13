@@ -24,7 +24,7 @@ export const updatePlaceValidator = vine.compile(
     lengthMin: vine.string().optional(),
     lengthMax: vine.string().optional(),
     routes: vine.string().optional(),
-    ownerId: vine.any().optional(),
+    owners: vine.array(vine.any().optional()).optional(),
     image: vine
       .file({
         size: '2mb',

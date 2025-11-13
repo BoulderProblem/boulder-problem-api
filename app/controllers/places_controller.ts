@@ -15,6 +15,7 @@ import sharp from 'sharp'
 import User from '#models/user'
 import axios from 'axios'
 import fs from 'fs'
+import UserPlace from '#models/user_place'
 
 const osmHeaders = {
   Authorization: 'Bearer F3m7iKmSgejTFepceqPyyyS1Knqj5MIUBhqn68NLAmU',
@@ -76,21 +77,22 @@ export default class PlacesController {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     return await Place.query()
-      .preload('owner', (query) => {
+      .join('user_places', 'places.id', 'user_places.place_id')
+      .where('user_places.user_id', user_id)
+      .preload('owners', (query) => {
         query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
       })
       .withCount('favorite', (query) =>
         query.count('*').as('is_favorite').where('user_id', user_id)
       )
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
-      .where('ownerId', user_id)
   }
 
   async getFavorites({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     return await Place.query()
-      .preload('owner', (query) => {
+      .preload('owners', (query) => {
         query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
       })
       .withCount('favorite', (query) =>
@@ -120,8 +122,8 @@ export default class PlacesController {
         .first()
     } else {
       return await Place.query()
-        .preload('owner', (query) => {
-          query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+        .preload('owners', (query) => {
+          query.select('id', 'firstname', 'lastname', 'email')
         })
         .withCount('favorite', (query) =>
           query.count('*').as('is_favorite').where('user_id', user_id)
@@ -169,8 +171,13 @@ export default class PlacesController {
   }
 
   async updatePlaceId({ auth, request }: HttpContext) {
+    assert(auth.user, 'kindly login')
+    let user_role = auth.user.roleId
+
     let payload = await request.validateUsing(updatePlaceValidator)
     let place = await Place.findOrFail(request.params().id)
+    let placeUsers = await UserPlace.query().where('place_id', request.params().id)
+    let usersId = placeUsers.map((userPlace) => userPlace.userId)
 
     if (typeof payload.coordinate === 'string')
       for (let [key, value] of Object.entries(payload)) {
@@ -181,7 +188,7 @@ export default class PlacesController {
       .geomFromText('SRID=4326;POINT(' + payload.coordinate.x + ' ' + payload.coordinate.y + ')')
     payload.coordinate = payload.coordinate.x + ',' + payload.coordinate.y
 
-    let exclude = ['coordinate', 'ownerId', 'geocoordinate']
+    let exclude = ['coordinate', 'owners', 'geocoordinate']
     let updateData = []
     for (let [key, value] of Object.entries(payload)) {
       if (place[key] !== value && !exclude.includes(key)) {
@@ -208,11 +215,30 @@ export default class PlacesController {
     }
 
     // if add owner to place
-    if (!place.ownerId && payload.ownerId) {
-      let user = await User.findOrFail(payload.ownerId)
-      if (user.roleId === 1) {
-        await user.merge({ ...{ roleId: 2 } }).save()
-      }
+    if (user_role === 3 && payload.owners && usersId !== payload.owners) {
+      payload.owners = payload.owners.map((userPlace) => userPlace.id)
+      // delete old owner
+      usersId.forEach(async (ownerId) => {
+        if (payload.owners && payload.owners.includes(ownerId)) return
+        await UserPlace.query()
+          .where('placeId', request.params().id)
+          .andWhere('userId', ownerId)
+          .delete()
+      })
+      // add owner to place
+      payload.owners.forEach(async (ownerId) => {
+        if (usersId.includes(ownerId)) return
+        await UserPlace.create({
+          placeId: request.params().id,
+          userId: ownerId,
+        })
+
+        // change user role if place owner
+        let user = await User.findOrFail(ownerId)
+        if (user.roleId === 1) {
+          await user.merge({ ...{ roleId: 2 } }).save()
+        }
+      })
     }
 
     await place.merge({ ...payload }).save()

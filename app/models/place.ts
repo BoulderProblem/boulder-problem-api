@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import { Opaque } from '@adonisjs/core/types/helpers'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import FavoritePlace from './favorite_place.js'
 import User, { type userId } from './user.js'
 
@@ -16,12 +16,6 @@ export default class Place extends BaseModel {
 
   @column()
   declare geocoordinate: any
-
-  @column()
-  declare ownerId: userId
-
-  @belongsTo(() => User, { foreignKey: 'ownerId' })
-  declare owner: BelongsTo<typeof User>
 
   @column({
     serialize: (value: string) => {
@@ -42,6 +36,15 @@ export default class Place extends BaseModel {
     serializeAs: null,
   })
   declare favorite: HasMany<typeof FavoritePlace>
+
+  @manyToMany(() => User, {
+    pivotTable: 'user_places',
+    localKey: 'id', // clé primaire dans users
+    pivotForeignKey: 'place_id',
+    relatedKey: 'id', // clé primaire dans contests
+    pivotRelatedForeignKey: 'user_id',
+  })
+  declare owners: ManyToMany<typeof User>
 
   @column()
   declare osmId: string

@@ -45,10 +45,6 @@ jobs:
         shell: bash
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      - name: Debug Firebase JSON
-        run: |
-          cat config/serviceAccountKey.json
-          jq . config/serviceAccountKey.json
 
       - name: Create .env.test file
         run: |

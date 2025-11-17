@@ -39,6 +39,7 @@ RUN mkdir -p /home/node/app/build/uploads/users \
 COPY --chown=node:node --from=dependencies /home/node/app/node_modules ./node_modules
 COPY --chown=node:node ./package*.json ./
 COPY --chown=node:node --from=build /home/node/app/build ./build
+COPY --chown=node:node ./config ./config
 RUN npm ci --omit=dev
 
 EXPOSE 3333

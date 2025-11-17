@@ -2,13 +2,11 @@ import admin from 'firebase-admin'
 import { readFileSync } from 'fs'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
-
-// Recréer __dirname pour ES modules
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+import app from '@adonisjs/core/services/app'
 
 // Path vers le fichier JSON créé par CI/CD
-const keyPath = path.join(__dirname, '../../config/serviceAccountKey.json')
+const appRoot = fileURLToPath(app.appRoot)
+const keyPath = path.join(appRoot, 'config/serviceAccountKey.json')
 
 // Lecture du fichier JSON
 const serviceAccount = JSON.parse(readFileSync(keyPath, 'utf-8'))

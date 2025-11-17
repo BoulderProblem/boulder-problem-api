@@ -41,9 +41,14 @@ jobs:
       - name: Create Firebase service account file
         run: |
           mkdir -p config
-          echo "$FIREBASE_SERVICE_ACCOUNT_B64" | base64 --decode > config/serviceAccountKey.json
+          echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > config/serviceAccountKey.json
+        shell: bash
         env:
-          FIREBASE_SERVICE_ACCOUNT_B64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B64 }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Debug Firebase JSON
+        run: |
+          cat config/serviceAccountKey.json
+          jq . config/serviceAccountKey.json
 
       - name: Create .env.test file
         run: |

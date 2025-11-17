@@ -11,6 +11,7 @@ import env from '#start/env'
 import ResetPasswordMailer from '../mailers/resetPassword.js'
 import { createUserValidator } from '#validators/user'
 import KeyBackups from '#models/key_backups'
+import Firebase from '#services/firebase'
 
 let imageRoute = `/home/node/app/build/uploads/users/`
 if (process.env.NODE_ENV !== 'production') {
@@ -94,6 +95,11 @@ export default class AuthController {
     let code = Math.floor(100000 + Math.random() * 900000)
 
     if (user.length === 1) {
+      if (user[0].firebase) {
+        return {
+          email_send: true,
+        }
+      }
       await new ResetPasswordMailer(user[0].email, user[0].firstname, code.toString()).sendNow()
 
       // delete old reset
@@ -181,64 +187,6 @@ export default class AuthController {
     return ally.use('google').redirect()
   }
 
-  async callback({ ally, request, auth, response }: HttpContext) {
-    const code = request.input('code')
-
-    if (!code) {
-      return response.badRequest('Missing ?code param')
-    }
-
-    try {
-      // 1️⃣ Échanger le code contre un access token
-      const tokenRes = await axios.post('https://oauth2.googleapis.com/token', null, {
-        params: {
-          code,
-          client_id: env.get('GOOGLE_CLIENT_ID'),
-          client_secret: env.get('GOOGLE_CLIENT_SECRET'),
-          redirect_uri: env.get('GOOGLE_CALLBACK_URL'),
-          grant_type: 'authorization_code',
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      })
-
-      const { access_token, id_token } = tokenRes.data
-
-      // 2️⃣ Récupérer le profil utilisateur avec le token
-      const userRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      })
-
-      const genderRes = await axios.get(
-        'https://people.googleapis.com/v1/people/me?personFields=genders',
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        }
-      )
-      console.log(genderRes.data)
-      console.log('✅ Sexe:', genderRes.data)
-
-      const userGoogle = userRes.data
-
-      console.log('✅ Profil utilisateur Google :', userGoogle)
-      const userCreate = await findOrCreateUser(userGoogle)
-      const token = await User.accessTokens.create(userCreate)
-
-      // return token
-      return response.redirect(
-        env.get('URL') + '/login?token=' + JSON.stringify(token) + '&id=' + userGoogle.sub
-      )
-    } catch (err) {
-      console.error('❌ Erreur OAuth:', err.response?.data || err.message)
-      return response.internalServerError('OAuth error')
-    }
-  }
-
   async storePrivateKey({ request, auth }: HttpContext) {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
@@ -273,30 +221,65 @@ export default class AuthController {
 
     return backup
   }
+
+  async firebaseLogin({ request, response }: HttpContext) {
+    const idToken = request.header('Authorization')?.replace('Bearer ', '')
+    console.log(idToken)
+
+    if (!idToken) {
+      return response.unauthorized({ error: 'Token manquant' })
+    }
+
+    try {
+      // Vérifier le token Firebase
+      const decoded = await Firebase.auth().verifyIdToken(idToken)
+      console.log(decoded)
+
+      if (!decoded.email) {
+        return response.unauthorized({ error: 'Token Firebase invalide' })
+      }
+      // Vérifier si l'utilisateur existe dans ta DB
+      let user = await User.query().where('email', decoded.email).first()
+      console.log(user)
+
+      if (!user) {
+        // Création du user dans Adonis
+        let avatar
+        if (decoded.picture) {
+          avatar = `${cuid()}.jpg`
+          const response = await axios.get(decoded.picture, { responseType: 'arraybuffer' })
+          await fs.writeFileSync(imageRoute + avatar, response.data)
+        }
+        user = await User.create({
+          email: decoded.email,
+          firebase: true,
+          firstname: decoded.name.split(' ')[0],
+          lastname: decoded.name.split(' ')[1],
+          avatar: avatar,
+          password: cuid(), // Set a random password
+        })
+      }
+
+      if (!user.firebase) {
+        // user is create from adonis refuse firebase user
+        return response.unauthorized({ error: "User don't exist for firebase" })
+      }
+
+      // Générer le token interne d'Adonis
+      const token = await User.accessTokens.create(user)
+
+      return {
+        ...token.toJSON(),
+        pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
+        userId: user.id,
+      }
+    } catch (error) {
+      console.log(error)
+      return response.unauthorized({ error: 'Token Firebase invalide' })
+    }
+  }
 }
 
-async function findOrCreateUser(userGoogle: any) {
-  const existing = await User.findBy('email', userGoogle.email)
-
-  if (existing) return existing
-
-  //save image
-
-  let avatar = `${cuid()}.jpg`
-  const response = await axios.get(userGoogle.picture, { responseType: 'arraybuffer' })
-
-  await fs.writeFileSync(imageRoute + avatar, response.data)
-
-  const user = new User()
-  user.email = userGoogle.email
-  user.avatar = avatar
-  user.firstname = userGoogle.given_name
-  user.lastname = userGoogle.family_name
-  user.password = cuid() // Set a random password
-  await user.save()
-
-  return user
-}
 async function deleteRequest(id: number) {
   const post = await ResetPassword.findOrFail(id)
   await post.delete()

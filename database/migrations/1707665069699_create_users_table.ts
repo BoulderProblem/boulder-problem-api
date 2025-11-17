@@ -13,6 +13,7 @@ export default class extends BaseSchema {
       table.string('avatar').nullable()
       table.string('bio').nullable()
       table.date('birth_date').nullable()
+      table.boolean('firebase').notNullable().defaultTo(false)
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()
     })

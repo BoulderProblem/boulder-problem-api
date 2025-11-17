@@ -41,6 +41,7 @@ router.get('/', async () => {
 })
 router.get('/generate', [UsersController, 'generate'])
 router.post('/register', [AuthController, 'register'])
+router.post('/auth/firebase', [AuthController, 'firebaseLogin'])
 router.get('/auth/google/redirect', [AuthController, 'redirect'])
 router.get('/auth/google/callback', [AuthController, 'callback'])
 router.post('/login', [AuthController, 'login'])

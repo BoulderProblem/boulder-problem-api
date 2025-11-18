@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN mkdir -p /home/node/app && chown -R node:node /home/node/app
 WORKDIR /home/node/app
-COPY --chown=node:node ./config/serviceAccountKey.json ./config/serviceAccountKey.json
 USER node
 RUN mkdir tmp
 
@@ -20,8 +19,6 @@ FROM base AS dependencies
 COPY --chown=node:node ./package*.json ./
 RUN npm ci
 COPY --chown=node:node . .
-COPY --chown=node:node ./config/serviceAccountKey.json ./config/serviceAccountKey.json
-
 
 FROM dependencies AS build
 RUN node ace build --ignore-ts-errors

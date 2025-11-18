@@ -66,6 +66,17 @@ jobs:
           GOOGLE_CLIENT_ID=fake_google_id
           GOOGLE_CLIENT_SECRET=fake_google_secret
           GOOGLE_CALLBACK_URL=http://localhost:3333/auth/google/callback
+          FIREBASE_TYPE=a
+          FIREBASE_PROJECT_ID=a
+          FIREBASE_PRIVATE_KEY_ID=1
+          FIREBASE_PRIVATE_KEY=a
+          FIREBASE_CLIENT_EMAIL=a
+          FIREBASE_CLIENT_ID=1
+          FIREBASE_AUTH_URI=a
+          FIREBASE_TOKEN_URI=a
+          FIREBASE_AUTH_PROVIDER_X509_CERT_URL=a
+          FIREBASE_CLIENT_X509_CERT_URL=a
+          FIREBASE_UNIVERSE_DOMAIN=a
           EOF
 
       - name: Run migrations

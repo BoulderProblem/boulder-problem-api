@@ -158,9 +158,9 @@ export default class ContestsController {
           .raw(
             `
           CASE vw.status
-            WHEN '1' THEN 1
-            WHEN '2' THEN 5
-            WHEN 'top' THEN 15
+            WHEN 'zone' THEN 1
+            WHEN 'top' THEN 5
+            WHEN 'flash' THEN 15
             ELSE 0
           END
         `

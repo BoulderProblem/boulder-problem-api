@@ -129,15 +129,20 @@ export default class WaysController {
       .where('wayId', request.params().id)
       .andWhere('user_id', auth.user.id)
       .first()
-
-    if (validExist) {
-      return await validExist.merge({ ...payload }).save()
+    if (payload.status === 'notvalid') {
+      if (validExist) {
+        return await validExist.delete()
+      }
     } else {
-      return await ValidWay.create({
-        user_id: auth.user.id,
-        status: payload.status,
-        wayId: request.params().id,
-      })
+      if (validExist) {
+        return await validExist.merge({ ...payload }).save()
+      } else {
+        return await ValidWay.create({
+          user_id: auth.user.id,
+          status: payload.status,
+          wayId: request.params().id,
+        })
+      }
     }
   }
 }

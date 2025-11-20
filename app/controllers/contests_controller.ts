@@ -188,6 +188,7 @@ export default class ContestsController {
    */
   async getContestWays({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
+    const user_id = auth.user.id
     const contestId = request.params().id
 
     // Check if the contest exists
@@ -197,6 +198,10 @@ export default class ContestsController {
     const ways = await Way.query()
       .preload('difficulty')
       .preload('color')
+      .preload('notes', (query) => query.where('user_id', user_id).select('note'))
+      .preload('valid', (query) => query.where('user_id', user_id))
+      .withCount('comments', (query) => query.count('*').as('nbComments'))
+      .withCount('avgnotes', (q) => q.avg('note').as('avg_note'))
       .preload('wall', (wallQuery) => {
         wallQuery.preload('zone', (zoneQuery) => {
           zoneQuery.preload('place')

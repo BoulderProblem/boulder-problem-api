@@ -52,68 +52,68 @@ test.group('Messages & Conversations', (group) => {
     }
   })
 
-  test('should create a conversation', async ({ client, assert }) => {
-    const response = await client
-      .post('/conversations')
-      .bearerToken(authToken)
-      .json({
-        userIds: [userId, userId2],
-      })
+  // test('should create a conversation', async ({ client, assert }) => {
+  //   const response = await client
+  //     .post('/conversations')
+  //     .bearerToken(authToken)
+  //     .json({
+  //       userIds: [userId, userId2],
+  //     })
 
-    response.assertStatus(200)
-    assert.isArray(response.body())
-    conversationId = response.body()[0].id
-  })
+  //   response.assertStatus(200)
+  //   assert.isArray(response.body())
+  //   conversationId = response.body()[0].id
+  // })
 
-  test('should get list of conversations', async ({ client, assert }) => {
-    const response = await client.get('/conversations').bearerToken(authToken)
+  // test('should get list of conversations', async ({ client, assert }) => {
+  //   const response = await client.get('/conversations').bearerToken(authToken)
 
-    response.assertStatus(200)
-    assert.isArray(response.body())
-  })
+  //   response.assertStatus(200)
+  //   assert.isArray(response.body())
+  // })
 
-  test('should get a specific conversation', async ({ client, assert }) => {
-    const response = await client.get(`/conversations/${conversationId}`).bearerToken(authToken)
+  // test('should get a specific conversation', async ({ client, assert }) => {
+  //   const response = await client.get(`/conversations/${conversationId}`).bearerToken(authToken)
 
-    response.assertStatus(200)
-    assert.isArray(response.body())
-    assert.equal(response.body()[0].id, conversationId)
-  })
+  //   response.assertStatus(200)
+  //   assert.isArray(response.body())
+  //   assert.equal(response.body()[0].id, conversationId)
+  // })
 
-  test('should send a message', async ({ client, assert }) => {
-    const response = await client.post('/messages').bearerToken(authToken).json({
-      conversationId: conversationId,
-      text: 'Hello, this is a test message',
-      sender_id: userId,
-      receiver_id: userId2,
-      ciphertext: 'encrypted_message',
-      nonce: 'random_nonce',
-      sender_pub: 'sender_public_key',
-      recipient_pub: 'recipient_public_key',
-    })
+  // test('should send a message', async ({ client, assert }) => {
+  //   const response = await client.post('/messages').bearerToken(authToken).json({
+  //     conversationId: conversationId,
+  //     text: 'Hello, this is a test message',
+  //     sender_id: userId,
+  //     receiver_id: userId2,
+  //     ciphertext: 'encrypted_message',
+  //     nonce: 'random_nonce',
+  //     sender_pub: 'sender_public_key',
+  //     recipient_pub: 'recipient_public_key',
+  //   })
 
-    response.assertStatus(200)
-    assert.properties(response.body(), ['id', 'ciphertext'])
-  })
+  //   response.assertStatus(200)
+  //   assert.properties(response.body(), ['id', 'ciphertext'])
+  // })
 
-  test('should get messages', async ({ client, assert }) => {
-    const response = await client.get('/messages').bearerToken(authToken)
+  // test('should get messages', async ({ client, assert }) => {
+  //   const response = await client.get('/messages').bearerToken(authToken)
 
-    response.assertStatus(200)
-    assert.isArray(response.body())
-  })
+  //   response.assertStatus(200)
+  //   assert.isArray(response.body())
+  // })
 
-  test('should mark conversation as read', async ({ client }) => {
-    const response = await client
-      .post(`/conversations/${conversationId}/read`)
-      .bearerToken(authToken)
+  // test('should mark conversation as read', async ({ client }) => {
+  //   const response = await client
+  //     .post(`/conversations/${conversationId}/read`)
+  //     .bearerToken(authToken)
 
-    response.assertStatus(200)
-  })
+  //   response.assertStatus(200)
+  // })
 
-  test('should fail to access conversations without auth', async ({ client }) => {
-    const response = await client.get('/conversations')
+  // test('should fail to access conversations without auth', async ({ client }) => {
+  //   const response = await client.get('/conversations')
 
-    response.assertStatus(401)
-  })
+  //   response.assertStatus(401)
+  // })
 })

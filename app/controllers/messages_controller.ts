@@ -52,9 +52,6 @@ export default class MessagesController {
 
         for (let id of payload.userIds) {
           let user = await User.findOrFail(id)
-          console.log('')
-
-          console.log(key)
 
           const encrypted = await encryptGroupKeyForUser(
             key,

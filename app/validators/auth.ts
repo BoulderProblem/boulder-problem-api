@@ -8,6 +8,7 @@ export const loginValidator = vine.compile(
     email: vine.string().trim().toLowerCase().email().normalizeEmail({
       all_lowercase: true,
       gmail_remove_dots: false,
+      gmail_remove_subaddress: false,
     }),
     password: vine.string().trim().minLength(6),
   })

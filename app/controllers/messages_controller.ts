@@ -6,12 +6,7 @@ import Conversation from '#models/conversation'
 import UsersConversation from '#models/users_conversation'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
-import {
-  encryptGroupKeyForUser,
-  encryptPrivateKey,
-  generateGroupKey,
-  generateKeys,
-} from '#services/crypto'
+import { encryptGroupKeyForUser, generateGroupKey } from '#services/crypto'
 import User from '#models/user'
 import GroupKeys from '#models/group_keys'
 import env from '#start/env'

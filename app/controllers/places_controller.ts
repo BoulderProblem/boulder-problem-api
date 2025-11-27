@@ -92,9 +92,6 @@ export default class PlacesController {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     return await Place.query()
-      .preload('owners', (query) => {
-        query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
-      })
       .withCount('favorite', (query) =>
         query.count('*').as('is_favorite').where('user_id', user_id)
       )

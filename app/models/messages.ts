@@ -14,19 +14,13 @@ export default class Message extends BaseModel {
   declare senderId: userId
 
   @column()
-  declare receiverId: userId
-
-  @column()
   declare ciphertext: string
 
   @column()
   declare nonce: string
 
   @column()
-  declare senderPub: string
-
-  @column()
-  declare recipientPub: string
+  declare key_version: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

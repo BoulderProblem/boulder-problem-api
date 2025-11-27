@@ -6,6 +6,15 @@ import Conversation from '#models/conversation'
 import UsersConversation from '#models/users_conversation'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import {
+  encryptGroupKeyForUser,
+  encryptPrivateKey,
+  generateGroupKey,
+  generateKeys,
+} from '#services/crypto'
+import User from '#models/user'
+import GroupKeys from '#models/group_keys'
+import env from '#start/env'
 
 export default class MessagesController {
   async createConversations({ auth, request }: HttpContext) {
@@ -34,10 +43,33 @@ export default class MessagesController {
       if (existing) {
         return existing
       } else {
-        const conv = await Conversation.create({ name: payload.name || '', creatorId: user_id })
+        const key = await generateGroupKey()
+        const conv = await Conversation.create({
+          name: payload.name || '',
+          creatorId: user_id,
+          key_version: 1,
+        })
 
         for (let id of payload.userIds) {
+          let user = await User.findOrFail(id)
+          console.log('')
+
+          console.log(key)
+
+          const encrypted = await encryptGroupKeyForUser(
+            key,
+            user.publicKey,
+            env.get('SERVER_MASTER_PRIVATE_KEY') as string
+          )
+
           await UsersConversation.create({ userId: id, conversationId: conv.id })
+          await GroupKeys.create({
+            userId: id,
+            conversationId: conv.id,
+            version: 1,
+            ciphertext: encrypted.ciphertext,
+            nonce: encrypted.nonce,
+          })
         }
 
         return await Conversation.query()
@@ -47,18 +79,12 @@ export default class MessagesController {
             })
           })
           .preload('messages', (query) => {
-            query
-              .where('senderId', user_id)
-              .orWhere('receiverId', user_id)
-              .orderBy('createdAt', 'desc')
-              .limit(1)
+            query.orderBy('createdAt', 'desc').limit(1)
+          })
+          .preload('groupKeys', (query) => {
+            query.where('userId', user_id)
           })
           .where('id', conv.id)
-          .andWhere((query) => {
-            query.where('creatorId', user_id).orWhereHas('messages', (q2) => {
-              q2.where('senderId', user_id).orWhere('receiverId', user_id)
-            })
-          })
       }
     } else {
       return
@@ -72,34 +98,17 @@ export default class MessagesController {
     return await Conversation.query()
       .preload('usersConversation', (usersConversation) => {
         usersConversation.preload('user', (query) => {
-          query.select('id', 'firstname', 'lastname', 'publicKey')
+          query.select('id', 'firstname', 'lastname', 'publicKey') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
         })
       })
       .preload('latestMessage', (query) => {
-        query
-          .where((q) => {
-            q.where('senderId', user_id).orWhere('receiverId', user_id)
-          })
-          .orderBy('createdAt', 'desc')
-          .limit(1)
+        query.orderBy('createdAt', 'desc').limit(1)
       })
-      .withCount('messages', (query) => {
-        query
-          .count('*')
-          .as('unread_messages')
-          .where('receiver_id', user_id)
-          .andWhereRaw(
-            `messages.created_at > COALESCE(
-            (SELECT last_read_at 
-             FROM users_conversations uc 
-             WHERE uc.conversation_id = messages.conversation_id 
-             AND uc.user_id = ?), '1970-01-01')`,
-            [user_id]
-          )
+      .preload('groupKeys', (query) => {
+        query.where('userId', user_id)
       })
-      .where('creatorId', user_id)
-      .orWhereHas('messages', (query) => {
-        query.where('senderId', user_id).orWhere('receiverId', user_id)
+      .whereHas('usersConversation', (query) => {
+        query.where('user_id', user_id) // Vérifier si l'utilisateur est dans la conversation avec l'utilisateur connecté
       })
   }
 
@@ -107,6 +116,11 @@ export default class MessagesController {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     let convId = request.params().id
+
+    await UsersConversation.query()
+      .where('conversation_id', convId)
+      .andWhere('user_id', user_id)
+      .firstOrFail()
 
     return await Conversation.query()
       .preload('usersConversation', (usersConversation) => {
@@ -121,11 +135,13 @@ export default class MessagesController {
           .orderBy('createdAt', 'desc')
           .limit(1)
       })
+      .preload('groupKeys', (query) => {
+        query.where('userId', user_id)
+      })
       .withCount('messages', (query) => {
         query
           .count('*')
           .as('unread_messages')
-          .where('receiver_id', user_id)
           .andWhereRaw(
             `messages.created_at > COALESCE(
             (SELECT last_read_at 
@@ -136,11 +152,6 @@ export default class MessagesController {
           )
       })
       .where('id', convId)
-      .andWhere((query) => {
-        query.where('creatorId', user_id).orWhereHas('messages', (q2) => {
-          q2.where('senderId', user_id).orWhere('receiverId', user_id)
-        })
-      })
   }
 
   async getConversationidRead({ auth, request }: HttpContext) {
@@ -159,15 +170,7 @@ export default class MessagesController {
   }
 
   async store({ request }: HttpContext) {
-    const data = request.only([
-      'sender_id',
-      'receiver_id',
-      'ciphertext',
-      'nonce',
-      'sender_pub',
-      'recipient_pub',
-      'conversationId',
-    ])
+    const data = request.only(['sender_id', 'ciphertext', 'nonce', 'conversationId', 'key_version'])
 
     const message = await Message.create(data)
     // update conv
@@ -183,23 +186,22 @@ export default class MessagesController {
 
     let messages: any[] = []
 
+    await UsersConversation.query()
+      .where('conversation_id', convId)
+      .andWhere('user_id', user_id)
+      .firstOrFail()
+
     if (convId) {
       if (before) {
         messages = await Message.query()
           .where('conversationId', convId)
           .andWhere('createdAt', '<', before)
-          .andWhere((query) => {
-            query.where('senderId', user_id).orWhere('receiverId', user_id)
-          })
           .orderBy('createdAt', 'desc')
           .limit(100)
         return messages
       } else {
         messages = await Message.query()
           .where('conversationId', convId)
-          .andWhere((query) => {
-            query.where('senderId', user_id).orWhere('receiverId', user_id)
-          })
           .orderBy('createdAt', 'desc')
           .limit(100)
       }

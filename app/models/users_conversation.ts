@@ -14,6 +14,9 @@ export default class UsersConversation extends BaseModel {
   @column()
   declare conversationId: conversationId
 
+  @column()
+  declare role: string
+
   @belongsTo(() => Conversation, {
     foreignKey: 'conversationId',
   })

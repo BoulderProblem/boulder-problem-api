@@ -1,6 +1,6 @@
 import User from '#models/user'
 import { HttpContext } from '@adonisjs/core/http'
-import { assert, decryptPrivateKey, encryptPrivateKey } from '../utils.js'
+import { assert } from '../utils.js'
 import { loginValidator, lostPasswordValidator, resetPasswordValidator } from '#validators/auth'
 import ResetPassword from '#models/reset_password'
 import { cuid } from '@adonisjs/core/helpers'
@@ -12,6 +12,7 @@ import ResetPasswordMailer from '../mailers/resetPassword.js'
 import { createUserValidator } from '#validators/user'
 import KeyBackups from '#models/key_backups'
 import Firebase from '#services/firebase'
+import { decryptPrivateKey, encryptPrivateKey } from '#services/crypto'
 
 let imageRoute = `/home/node/app/build/uploads/users/`
 if (process.env.NODE_ENV !== 'production') {

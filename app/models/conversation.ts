@@ -5,6 +5,7 @@ import UsersConversation from './users_conversation.js'
 import { type HasMany } from '@adonisjs/lucid/types/relations'
 import Message from './messages.js'
 import { type userId } from './user.js'
+import GroupKeys from './group_keys.js'
 
 export type conversationId = Opaque<'conversationId', string>
 
@@ -18,10 +19,18 @@ export default class Conversation extends BaseModel {
   @column()
   declare name: string
 
+  @column()
+  declare key_version: number
+
   @hasMany(() => UsersConversation, {
     foreignKey: 'conversationId',
   })
   declare usersConversation: HasMany<typeof UsersConversation>
+
+  @hasMany(() => GroupKeys, {
+    foreignKey: 'conversationId',
+  })
+  declare groupKeys: HasMany<typeof GroupKeys>
 
   @hasMany(() => Message, {
     foreignKey: 'conversationId',

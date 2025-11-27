@@ -4,6 +4,7 @@ import server from '@adonisjs/core/services/server'
 import Message from '#models/messages'
 import Conversation from '#models/conversation'
 import { DateTime } from 'luxon'
+import UsersConversation from '#models/users_conversation'
 
 app.ready(() => {
   const io = new Server(server.getNodeServer(), {
@@ -30,9 +31,15 @@ app.ready(() => {
         let conv = await Conversation.findOrFail(message.conversationId)
         conv.merge({ updatedAt: DateTime.local() }).save()
 
+        let usersConv = await UsersConversation.query().where(
+          'conversation_id',
+          message.conversationId
+        )
+
         // notifier tous les participants (ex: sender + receiver)
-        io.to(`user:${messageSave.senderId}`).emit('message:new', messageSave)
-        io.to(`user:${messageSave.receiverId}`).emit('message:new', messageSave)
+        usersConv.forEach((uc) => {
+          io.to(`user:${uc.userId}`).emit('message:new', messageSave)
+        })
       } catch (err) {
         console.error("Erreur lors de l'envoi du message:", err)
       }

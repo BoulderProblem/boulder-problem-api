@@ -36,7 +36,7 @@ export default class MessagesController {
         .first()
 
       if (existing) {
-        return existing
+        return { success: false, convId: existing.conversation_id }
       } else {
         const key = await generateGroupKey()
         const conv = await Conversation.create({
@@ -94,7 +94,7 @@ export default class MessagesController {
         })
       })
       .preload('latestMessage', (query) => {
-        query.orderBy('createdAt', 'desc').limit(1)
+        query.orderBy('createdAt', 'desc')
       })
       .preload('groupKeys', (query) => {
         query.where('userId', user_id)

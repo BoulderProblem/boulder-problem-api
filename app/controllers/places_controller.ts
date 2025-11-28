@@ -120,7 +120,7 @@ export default class PlacesController {
     } else {
       return await Place.query()
         .preload('owners', (query) => {
-          query.select('id', 'firstname', 'lastname', 'email')
+          query.select('id', 'firstname', 'lastname', 'email', 'avatar')
         })
         .withCount('favorite', (query) =>
           query.count('*').as('is_favorite').where('user_id', user_id)

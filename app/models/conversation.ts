@@ -1,8 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
 import { Opaque } from '@adonisjs/core/types/helpers'
 import UsersConversation from './users_conversation.js'
-import { type HasMany } from '@adonisjs/lucid/types/relations'
+import { type HasOne, type HasMany } from '@adonisjs/lucid/types/relations'
 import Message from './messages.js'
 import { type userId } from './user.js'
 import GroupKeys from './group_keys.js'
@@ -37,10 +37,10 @@ export default class Conversation extends BaseModel {
   })
   declare messages: HasMany<typeof Message>
 
-  @hasMany(() => Message, {
+  @hasOne(() => Message, {
     foreignKey: 'conversationId',
   })
-  declare latestMessage: HasMany<typeof Message>
+  declare latestMessage: HasOne<typeof Message>
 
   @column({
     serialize: (value: string) => {

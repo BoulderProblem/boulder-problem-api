@@ -73,6 +73,20 @@ export default class MessagesController {
           .preload('messages', (query) => {
             query.orderBy('createdAt', 'desc').limit(1)
           })
+          .withCount('messages', (query) => {
+            query
+              .count('*')
+              .as('unread_messages')
+              .where('sender_id', '!=', user_id)
+              .andWhereRaw(
+                `messages.created_at > COALESCE(
+            (SELECT last_read_at
+             FROM users_conversations uc 
+             WHERE uc.conversation_id = messages.conversation_id 
+             AND uc.user_id = ?), '1970-01-01')`,
+                [user_id]
+              )
+          })
           .preload('groupKeys', (query) => {
             query.where('userId', user_id)
           })
@@ -90,11 +104,25 @@ export default class MessagesController {
     return await Conversation.query()
       .preload('usersConversation', (usersConversation) => {
         usersConversation.preload('user', (query) => {
-          query.select('id', 'firstname', 'lastname', 'publicKey') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+          query.select('id', 'firstname', 'lastname', 'avatar') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
         })
       })
       .preload('latestMessage', (query) => {
         query.orderBy('createdAt', 'desc')
+      })
+      .withCount('messages', (query) => {
+        query
+          .count('*')
+          .as('unread_messages')
+          .where('sender_id', '!=', user_id)
+          .andWhereRaw(
+            `messages.created_at > COALESCE(
+            (SELECT last_read_at
+             FROM users_conversations uc 
+             WHERE uc.conversation_id = messages.conversation_id 
+             AND uc.user_id = ?), '1970-01-01')`,
+            [user_id]
+          )
       })
       .preload('groupKeys', (query) => {
         query.where('userId', user_id)
@@ -117,7 +145,7 @@ export default class MessagesController {
     return await Conversation.query()
       .preload('usersConversation', (usersConversation) => {
         usersConversation.preload('user', (query) => {
-          query.select('id', 'firstname', 'lastname', 'publicKey') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
+          query.select('id', 'firstname', 'lastname', 'avatar') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
         })
       })
       .preload('messages', (query) => {

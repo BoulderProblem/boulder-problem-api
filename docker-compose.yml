@@ -23,16 +23,17 @@ services:
       - postgres
     build:
       context: .
-      target: dependencies
+      target: build
     ports:
       - ${PORT}:${PORT}
       - 9229:9229
     env_file:
       - .env
     environment:
-      - DB_HOST=host.docker.internal
+      - DB_HOST=postgres
     volumes:
       - ./:/home/node/app
+      - /home/node/app/node_modules
     command: sh -c "node ace migration:run && dumb-init node ace serve --watch"
 
 volumes:

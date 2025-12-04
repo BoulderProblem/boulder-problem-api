@@ -234,14 +234,18 @@ export default class AuthController {
     try {
       // Vérifier le token Firebase
       const decoded = await Firebase.auth().verifyIdToken(idToken)
-      console.log(decoded)
+
+      const userRecord = await Firebase.auth().getUser(decoded.uid);
+
+      if (!decoded.picture && userRecord.providerData[0] && userRecord.providerData[0].photoURL) {
+        decoded.picture = userRecord.providerData[0].photoURL
+      }
 
       if (!decoded.email) {
         return response.unauthorized({ error: 'Token Firebase invalide' })
       }
       // Vérifier si l'utilisateur existe dans ta DB
       let user = await User.query().where('email', decoded.email).first()
-      console.log(user)
 
       if (!user) {
         // Création du user dans Adonis

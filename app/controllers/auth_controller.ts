@@ -235,7 +235,7 @@ export default class AuthController {
       // Vérifier le token Firebase
       const decoded = await Firebase.auth().verifyIdToken(idToken)
 
-      const userRecord = await Firebase.auth().getUser(decoded.uid);
+      const userRecord = await Firebase.auth().getUser(decoded.uid)
 
       if (!decoded.picture && userRecord.providerData[0] && userRecord.providerData[0].photoURL) {
         decoded.picture = userRecord.providerData[0].photoURL

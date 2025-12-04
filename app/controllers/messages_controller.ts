@@ -48,20 +48,22 @@ export default class MessagesController {
         for (let id of payload.userIds) {
           let user = await User.findOrFail(id)
 
-          const encrypted = await encryptGroupKeyForUser(
-            key,
-            user.publicKey,
-            env.get('SERVER_MASTER_PRIVATE_KEY') as string
-          )
-
           await UsersConversation.create({ userId: id, conversationId: conv.id })
-          await GroupKeys.create({
-            userId: id,
-            conversationId: conv.id,
-            version: 1,
-            ciphertext: encrypted.ciphertext,
-            nonce: encrypted.nonce,
-          })
+
+          if (user.publicKey) {
+            const encrypted = await encryptGroupKeyForUser(
+              key,
+              user.publicKey,
+              env.get('SERVER_MASTER_PRIVATE_KEY') as string
+            )
+            await GroupKeys.create({
+              userId: id,
+              conversationId: conv.id,
+              version: 1,
+              ciphertext: encrypted.ciphertext,
+              nonce: encrypted.nonce,
+            })
+          }
         }
 
         return await Conversation.query()

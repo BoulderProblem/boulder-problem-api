@@ -233,7 +233,7 @@ export default class AuthController {
 
     try {
       // Vérifier le token Firebase
-      const decoded = await Firebase.auth().verifyIdToken(idToken)
+      let decoded = await Firebase.auth().verifyIdToken(idToken)
 
       const userRecord = await Firebase.auth().getUser(decoded.uid)
 

@@ -55,6 +55,7 @@ export default class PostsController {
       text: payload.text,
       image: imageids,
       user_id: auth.user.id,
+      location: payload.location,
     })
 
     return post
@@ -66,13 +67,19 @@ export default class PostsController {
    * @requestBody {"title": "title", "text": "coucou"}
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
-  async updatePosts({ request }: HttpContext) {
+  async updatePosts({ auth, request, response }: HttpContext) {
+    assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(updatePostValidator)
     let post = await Post.findOrFail(request.params().id)
 
-    await post.merge({ ...payload, ...{ updatedAt: DateTime.local() } }).save()
+    if (post.user_id === auth.user.id) {
+      await post.merge({ ...payload, ...{ updatedAt: DateTime.local() } }).save()
 
-    return await Post.findOrFail(request.params().id)
+      return await Post.findOrFail(request.params().id)
+    } else {
+      response.status(401).send('Permission denied')
+      return
+    }
   }
 
   /**

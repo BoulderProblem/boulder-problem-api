@@ -22,6 +22,9 @@ export default class Post extends BaseModel {
   declare text: string
 
   @column()
+  declare location: string
+
+  @column()
   declare user_id: userId
 
   @column({

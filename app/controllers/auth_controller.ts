@@ -235,23 +235,11 @@ export default class AuthController {
       // Vérifier le token Firebase
       let decoded = await Firebase.auth().verifyIdToken(idToken)
 
-      console.log('a')
-      console.log(decoded)
-
       const userRecord = await Firebase.auth().getUser(decoded.uid)
-
-      console.log('c')
-
-      console.log(userRecord)
-
-      console.log(userRecord.providerData[0].photoURL)
 
       if (!decoded.picture && userRecord.providerData[0] && userRecord.providerData[0].photoURL) {
         decoded.picture = userRecord.providerData[0].photoURL
       }
-
-      console.log('c')
-      console.log(decoded)
 
       if (!decoded.email) {
         return response.unauthorized({ error: 'Token Firebase invalide' })

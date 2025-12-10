@@ -1,9 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
 import { Opaque } from '@adonisjs/core/types/helpers'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import UsersContest from './users_contest.js'
-import { type placeId } from './place.js'
+import Place, { type placeId } from './place.js'
 import { type userId } from './user.js'
 
 export type contestId = Opaque<'contestId', string>
@@ -32,6 +32,11 @@ export default class Contest extends BaseModel {
 
   @column()
   declare endDate: DateTime
+
+  @belongsTo(() => Place, {
+    foreignKey: 'placeId',
+  })
+  declare place: BelongsTo<typeof Place>
 
   @column({
     serialize: (value: string) => {

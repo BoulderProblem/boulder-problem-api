@@ -63,6 +63,7 @@ export default class ContestsController {
     }
     return await Contest.query()
       .withCount('follow', (query) => query.count('*').as('follow_count'))
+      .preload('place', (query) => query.select('id', 'name'))
       .where('userId', auth.user.id)
       .orWhere('status', 'valid')
       .orWhere('status', 'stopped')
@@ -75,6 +76,7 @@ export default class ContestsController {
     const contestId = request.params().id
     return await Contest.query()
       .withCount('follow', (query) => query.count('*').as('follow_count'))
+      .preload('place', (query) => query.select('id', 'name'))
       .andWhere('id', contestId)
       .firstOrFail()
   }

@@ -12,13 +12,43 @@ import { assert } from '../utils.js'
 import CommentsWay from '#models/comments_way'
 import NotesWay from '#models/notes_way'
 import ValidWay from '#models/valid_way'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
+import { promises as fs } from 'fs'
+import sharp from 'sharp'
+
+let imageRoute = `/home/node/app/build/uploads/posts/`
+if (process.env.NODE_ENV !== 'production') {
+  imageRoute = `./uploads/posts/`
+}
 
 export default class WaysController {
   async createWay({ request }: HttpContext) {
     let payload = await request.validateUsing(createWayValidator)
+    let imageId
+    if (payload.image) {
+      // Décoder et sauvegarder l'image base64
+      const base64Data = payload.image.replace(/^data:image\/\w+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+      const ext = payload.image.split(';')[0].split('/')[1] // extraire l'extension
+      imageId = `${cuid()}.${ext}`
+      const path = app.makePath('uploads/posts', imageId)
+
+      // Créer le répertoire s'il n'existe pas
+      await fs.mkdir(app.makePath('uploads/posts'), { recursive: true })
+      await fs.writeFile(path, buffer)
+    }
 
     // save way
-    return await Way.create(payload)
+    return await Way.create({
+      wallId: payload.wallId,
+      colorId: payload.colorId,
+      difficultyId: payload.difficultyId,
+      style: payload.style,
+      routeSetter: payload.routeSetter,
+      name: payload.name,
+      image: imageId,
+    })
   }
 
   async getWayId({ auth, request }: HttpContext) {
@@ -34,6 +64,21 @@ export default class WaysController {
       .withCount('avgnotes', (q) => q.avg('note').as('avg_note'))
       .where('id', request.params().id)
       .first()
+  }
+
+  async getWayImage({ request, response }: HttpContext) {
+    let size = 500
+    if (request.qs().size) {
+      size = parseInt(request.qs().size)
+    }
+    let way = await Way.findOrFail(request.params().id)
+    if (way.image) {
+      const buffer = await sharp(imageRoute + way.image).resize(size)
+      response.header('Content-Type', 'image/' + way.image.split('.')[1])
+      return response.stream(buffer)
+    } else {
+      return response.status(422).send("nom de l'avatar incorrect")
+    }
   }
 
   async updateWayId({ request }: HttpContext) {

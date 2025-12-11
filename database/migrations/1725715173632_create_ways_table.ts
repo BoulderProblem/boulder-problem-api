@@ -23,6 +23,7 @@ export default class extends BaseSchema {
       table.string('style')
       table.string('route_setter')
       table.string('name')
+      table.string('image')
       table.timestamp('created_at')
       table.timestamp('delete_at')
       table.timestamp('updated_at')

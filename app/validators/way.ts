@@ -11,6 +11,7 @@ export const createWayValidator = vine.compile(
     style: vine.string(),
     routeSetter: vine.string(),
     name: vine.string(),
+    image: vine.string().optional(),
   })
 )
 

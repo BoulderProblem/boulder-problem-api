@@ -192,6 +192,9 @@ router
   .delete('/ways/:id', [WaysController, 'disableWayId'])
   .use([middleware.auth(), middleware.role(['MANAGER', 'ADMIN'])])
 router
+  .get('/ways/:id/image', [WaysController, 'getWayImage'])
+  .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
+router
   .get('/ways/:id/comments', [WaysController, 'getWayComments'])
   .use([middleware.auth(), middleware.role(['USER', 'MANAGER', 'ADMIN'])])
 router

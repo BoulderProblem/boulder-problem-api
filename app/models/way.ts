@@ -33,6 +33,9 @@ export default class Way extends BaseModel {
   @column()
   declare name: string
 
+  @column()
+  declare image: string
+
   @belongsTo(() => Color, {
     foreignKey: 'colorId',
   })

@@ -22,6 +22,7 @@ export const updateWayValidator = vine.compile(
     style: vine.string().optional(),
     routeSetter: vine.string().optional(),
     name: vine.string().optional(),
+    image: vine.string().optional(),
   })
 )
 

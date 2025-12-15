@@ -77,7 +77,7 @@ export default class WaysController {
       response.header('Content-Type', 'image/' + way.image.split('.')[1])
       return response.stream(buffer)
     } else {
-      return response.status(422).send("nom de l'avatar incorrect")
+      return response.status(422).send('aucune image pour cette voie')
     }
   }
 
@@ -85,6 +85,33 @@ export default class WaysController {
     let payload = await request.validateUsing(updateWayValidator)
     let way = await Way.findOrFail(request.params().id)
 
+    if (!payload.image && way.image) {
+      // delete image
+      await fs.unlink(imageRoute + way.image)
+      payload.image = null
+    }
+
+    if (payload.image) {
+      if (way.image !== payload.image) {
+        // delete old image
+        if (way.image) {
+          await fs.unlink(imageRoute + way.image)
+        }
+
+        // save new image
+        const base64Data = payload.image.replace(/^data:image\/\w+;base64,/, '')
+        const buffer = Buffer.from(base64Data, 'base64')
+        const ext = payload.image.split(';')[0].split('/')[1] // extraire l'extension
+        const imageId = `${cuid()}.${ext}`
+        const path = app.makePath('uploads/posts', imageId)
+
+        // Créer le répertoire s'il n'existe pas
+        await fs.mkdir(app.makePath('uploads/posts'), { recursive: true })
+        await fs.writeFile(path, buffer)
+
+        payload.image = imageId
+      }
+    }
     // save way
     await way.merge({ ...payload }).save()
 

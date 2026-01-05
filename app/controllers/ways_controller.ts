@@ -12,15 +12,18 @@ import { assert } from '../utils.js'
 import CommentsWay from '#models/comments_way'
 import NotesWay from '#models/notes_way'
 import ValidWay from '#models/valid_way'
+import FileService from '#services/FileService'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import { promises as fs } from 'fs'
 import sharp from 'sharp'
+import { Readable } from 'stream'
 
 let imageRoute = `/home/node/app/build/uploads/posts/`
 if (process.env.NODE_ENV !== 'production') {
   imageRoute = `./uploads/posts/`
 }
+const fileService = new FileService()
 
 export default class WaysController {
   async createWay({ request }: HttpContext) {
@@ -30,13 +33,15 @@ export default class WaysController {
       // Décoder et sauvegarder l'image base64
       const base64Data = payload.image.replace(/^data:image\/\w+;base64,/, '')
       const buffer = Buffer.from(base64Data, 'base64')
-      const ext = payload.image.split(';')[0].split('/')[1] // extraire l'extension
-      imageId = `${cuid()}.${ext}`
-      const path = app.makePath('uploads/posts', imageId)
 
-      // Créer le répertoire s'il n'existe pas
-      await fs.mkdir(app.makePath('uploads/posts'), { recursive: true })
-      await fs.writeFile(path, buffer)
+      const fileInfo = {
+        buffer,
+        extname: payload.image.split(';')[0].split('/')[1], // Assurez-vous d'avoir l'extension
+        headers: {
+          'content-type': payload.image.split(';')[0].split(':')[1],
+        },
+      }
+      imageId = await fileService.uploadFile(fileInfo, 'images')
     }
 
     // save way
@@ -73,9 +78,20 @@ export default class WaysController {
     }
     let way = await Way.findOrFail(request.params().id)
     if (way.image) {
-      const buffer = await sharp(imageRoute + way.image).resize(size)
-      response.header('Content-Type', 'image/' + way.image.split('.')[1])
-      return response.stream(buffer)
+      const object = await fileService.getFile(way.image)
+
+      console.log(object)
+
+      if (!object.Body) {
+        return response.status(404).send('Not found')
+      }
+
+      // Headers importants
+      response.header('Content-Type', object.ContentType || 'application/octet-stream')
+      response.header('Content-Length', object.ContentLength?.toString() || '')
+      response.header('Cache-Control', 'private, max-age=3600')
+
+      return response.stream(object.Body as Readable)
     } else {
       return response.status(422).send('aucune image pour cette voie')
     }
@@ -85,9 +101,12 @@ export default class WaysController {
     let payload = await request.validateUsing(updateWayValidator)
     let way = await Way.findOrFail(request.params().id)
 
+    console.log(payload)
+    console.log(way)
+
     if (!payload.image && way.image) {
       // delete image
-      await fs.unlink(imageRoute + way.image)
+      await fileService.deleteFile(way.image)
       payload.image = null
     }
 
@@ -95,19 +114,21 @@ export default class WaysController {
       if (way.image !== payload.image) {
         // delete old image
         if (way.image) {
-          await fs.unlink(imageRoute + way.image)
+          await fileService.deleteFile(way.image)
         }
 
         // save new image
         const base64Data = payload.image.replace(/^data:image\/\w+;base64,/, '')
         const buffer = Buffer.from(base64Data, 'base64')
-        const ext = payload.image.split(';')[0].split('/')[1] // extraire l'extension
-        const imageId = `${cuid()}.${ext}`
-        const path = app.makePath('uploads/posts', imageId)
 
-        // Créer le répertoire s'il n'existe pas
-        await fs.mkdir(app.makePath('uploads/posts'), { recursive: true })
-        await fs.writeFile(path, buffer)
+        const fileInfo = {
+          buffer,
+          extname: payload.image.split(';')[0].split('/')[1], // Assurez-vous d'avoir l'extension
+          headers: {
+            'content-type': payload.image.split(';')[0].split(':')[1],
+          },
+        }
+        const imageId = await fileService.uploadFile(fileInfo, 'images')
 
         payload.image = imageId
       }

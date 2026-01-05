@@ -13,6 +13,10 @@ export default class FileService {
   private client: S3Client
 
   constructor() {
+    if (process.env.NODE_ENV === 'test') {
+      return
+    }
+
     if (!r2Config.accessKeyId || !r2Config.secretAccessKey) {
       throw new Error('Missing R2 credentials')
     }

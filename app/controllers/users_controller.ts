@@ -219,10 +219,10 @@ export default class UsersController {
       page = 1
     }
     return await Post.query()
-      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', id))
+      .withCount('likes', (query) => query.count('*').as('is_like').where('userId', id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .withCount('comments', (query) => query.count('*').as('comments_count'))
-      .where('user_id', user_id)
+      .where('userId', user_id)
       .orderBy('createdAt', 'desc')
       .paginate(page, 10)
   }

@@ -13,10 +13,6 @@ import CommentsWay from '#models/comments_way'
 import NotesWay from '#models/notes_way'
 import ValidWay from '#models/valid_way'
 import FileService from '#services/FileService'
-import { cuid } from '@adonisjs/core/helpers'
-import app from '@adonisjs/core/services/app'
-import { promises as fs } from 'fs'
-import sharp from 'sharp'
 import { Readable } from 'stream'
 
 let imageRoute = `/home/node/app/build/uploads/posts/`
@@ -79,8 +75,6 @@ export default class WaysController {
     let way = await Way.findOrFail(request.params().id)
     if (way.image) {
       const object = await fileService.getFile(way.image)
-
-      console.log(object)
 
       if (!object.Body) {
         return response.status(404).send('Not found')

@@ -16,6 +16,13 @@ export const createPostValidator = vine.compile(
       .optional(),
     text: vine.string(),
     location: vine.string().optional(),
+    startTime: vine.date().optional(),
+    endTime: vine.date().optional(),
+    activity: vine.number().optional(),
+    feeling: vine.number().optional(),
+    privateNote: vine.string().optional(),
+    materials: vine.number().optional(),
+    visibility: vine.number().optional(),
   })
 )
 
@@ -27,6 +34,13 @@ export const updatePostValidator = vine.compile(
     title: vine.string().optional(),
     text: vine.string().optional(),
     location: vine.string().optional(),
+    startTime: vine.date().optional(),
+    endTime: vine.date().optional(),
+    activity: vine.number().optional(),
+    feeling: vine.number().optional(),
+    privateNote: vine.string().optional(),
+    materials: vine.number().optional(),
+    visibility: vine.number().optional(),
   })
 )
 

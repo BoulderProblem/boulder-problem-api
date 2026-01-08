@@ -90,7 +90,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare followings: HasMany<typeof Follow>
 
   @hasMany(() => Post, {
-    foreignKey: 'user_id',
+    foreignKey: 'userId',
     serializeAs: null,
   })
   declare posts: HasMany<typeof Post>

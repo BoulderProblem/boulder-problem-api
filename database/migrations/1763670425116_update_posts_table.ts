@@ -6,12 +6,26 @@ export default class extends BaseSchema {
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
       table.text('location')
+      table.date('start_time')
+      table.date('end_time')
+      table.integer('activity')
+      table.integer('feeling')
+      table.string('private_note')
+      table.integer('materials')
+      table.integer('visibility')
     })
   }
 
   async down() {
     this.schema.alterTable(this.tableName, (table) => {
       table.dropColumn('location')
+      table.dropColumn('start_time')
+      table.dropColumn('end_time')
+      table.dropColumn('activity')
+      table.dropColumn('feeling')
+      table.dropColumn('private_note')
+      table.dropColumn('materials')
+      table.dropColumn('visibility')
     })
   }
 }

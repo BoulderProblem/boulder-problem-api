@@ -25,7 +25,31 @@ export default class Post extends BaseModel {
   declare location: string
 
   @column()
-  declare user_id: userId
+  declare userId: userId
+
+  @column()
+  declare session: number
+
+  @column()
+  declare startTime: Date
+
+  @column()
+  declare endTime: Date
+
+  @column()
+  declare activity: number
+
+  @column()
+  declare feeling: number
+
+  @column()
+  declare privateNote: string
+
+  @column()
+  declare materials: number
+
+  @column()
+  declare visibility: number
 
   @column({
     serialize: (value: string) => {
@@ -59,7 +83,7 @@ export default class Post extends BaseModel {
   })
   declare comments: HasMany<typeof Comment>
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
   @column.dateTime({ autoCreate: true })

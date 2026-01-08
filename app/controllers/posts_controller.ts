@@ -8,16 +8,14 @@ import {
   updatePostValidator,
 } from '#validators/post'
 import Like from '#models/like'
-import app from '@adonisjs/core/services/app'
-import { cuid } from '@adonisjs/core/helpers'
+
+import FileService from '#services/FileService'
+import { Readable } from 'stream'
 import { DateTime } from 'luxon'
-import sharp from 'sharp'
+import fs from 'fs'
 import Comment from '#models/comment'
 
-let imageRoute = `/home/node/app/build/uploads/posts/`
-if (process.env.NODE_ENV !== 'production') {
-  imageRoute = `./uploads/posts/`
-}
+const fileService = new FileService()
 
 export default class PostsController {
   /**
@@ -40,13 +38,19 @@ export default class PostsController {
       payload.images = [payload.images]
     }
     for (const image of payload.images) {
-      // create unique image name
-      let imageName = `${cuid()}.${image.extname}`
-      imageids.push(imageName)
-      // save image
-      image.move(app.makePath('uploads/posts'), {
-        name: imageName,
-      })
+      // Décoder et sauvegarder l'image base64
+      const buffer = fs.readFileSync(image.tmpPath!)
+      const contentType = image.headers['content-type'] ?? 'image/jpeg'
+      const extname = image.extname ?? contentType.split('/')[1] ?? 'jpg'
+      const fileKey = await fileService.uploadFile(
+        {
+          buffer,
+          extname,
+          headers: { 'content-type': contentType },
+        },
+        'posts'
+      )
+      imageids.push(fileKey.split('/').pop() as string)
     }
 
     // save post
@@ -54,8 +58,15 @@ export default class PostsController {
       title: payload.title,
       text: payload.text,
       image: imageids,
-      user_id: auth.user.id,
+      userId: auth.user.id,
       location: payload.location,
+      startTime: payload.startTime,
+      endTime: payload.endTime,
+      activity: payload.activity,
+      feeling: payload.feeling,
+      privateNote: payload.privateNote,
+      materials: payload.materials,
+      visibility: payload.visibility,
     })
 
     return post
@@ -72,7 +83,7 @@ export default class PostsController {
     let payload = await request.validateUsing(updatePostValidator)
     let post = await Post.findOrFail(request.params().id)
 
-    if (post.user_id === auth.user.id) {
+    if (post.userId === auth.user.id) {
       await post.merge({ ...payload, ...{ updatedAt: DateTime.local() } }).save()
 
       return await Post.findOrFail(request.params().id)
@@ -95,9 +106,18 @@ export default class PostsController {
     }
     let post = await Post.findOrFail(request.params().id)
     if (post.image.includes(request.params().id_image)) {
-      const buffer = await sharp(imageRoute + request.params().id_image).resize(size)
-      response.header('Content-Type', 'image/' + request.params().id_image.split('.')[1])
-      return response.stream(buffer)
+      const object = await fileService.getFile('posts/' + request.params().id_image)
+
+      if (!object.Body) {
+        return response.status(404).send('Not found')
+      }
+
+      // Headers importants
+      response.header('Content-Type', object.ContentType || 'application/octet-stream')
+      response.header('Content-Length', object.ContentLength?.toString() || '')
+      response.header('Cache-Control', 'private, max-age=3600')
+
+      return response.stream(object.Body as Readable)
     } else {
       response.status(422).send('Wrong image name')
       return
@@ -117,7 +137,7 @@ export default class PostsController {
       .preload('user', (profileQuery) => {
         profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
       })
-      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+      .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .withCount('comments', (query) => query.count('*').as('comments_count'))
       .where('id', request.params().id)
@@ -131,7 +151,7 @@ export default class PostsController {
   async deletePostId({ auth, request, response }: HttpContext) {
     assert(auth.user, 'kindly login')
     const post = await Post.findOrFail(request.params().id)
-    if (auth.user.id === post.user_id) {
+    if (auth.user.id === post.userId) {
       await post.delete()
       return { success: true }
     } else {
@@ -154,7 +174,7 @@ export default class PostsController {
     // check if post exist
     await Post.findOrFail(post_id)
 
-    let like = await Like.query().where('post_id', post_id).andWhere('user_id', user_id)
+    let like = await Like.query().where('post_id', post_id).andWhere('userId', user_id)
 
     if (like.length === 0 && payload.like) {
       // create like
@@ -163,20 +183,20 @@ export default class PostsController {
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
         .first()
     } else if (like.length === 1 && !payload.like) {
       // unlike
-      await Like.query().where('post_id', post_id).andWhere('user_id', user_id).delete()
+      await Like.query().where('post_id', post_id).andWhere('userId', user_id).delete()
 
       return await Post.query()
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
@@ -186,7 +206,7 @@ export default class PostsController {
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)
@@ -246,7 +266,7 @@ export default class PostsController {
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
         .where('id', post_id)

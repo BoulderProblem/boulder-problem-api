@@ -58,6 +58,7 @@ export default class AuthController {
       ...token.toJSON(),
       pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
       userId: user.id,
+      firstLogin: false,
     }
   }
 

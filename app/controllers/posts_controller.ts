@@ -168,48 +168,48 @@ export default class PostsController {
   async likePost({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(likePostValidator)
-    let post_id = request.params().id
-    let user_id = auth.user.id
+    let postId = request.params().id
+    let userId = auth.user.id
 
     // check if post exist
-    await Post.findOrFail(post_id)
+    await Post.findOrFail(postId)
 
-    let like = await Like.query().where('post_id', post_id).andWhere('userId', user_id)
+    let like = await Like.query().where('postId', postId).andWhere('userId', userId)
 
     if (like.length === 0 && payload.like) {
       // create like
-      await Like.create({ post_id, user_id })
+      await Like.create({ postId: postId, userId: userId })
       return await Post.query()
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', userId))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
-        .where('id', post_id)
+        .where('id', postId)
         .first()
     } else if (like.length === 1 && !payload.like) {
       // unlike
-      await Like.query().where('post_id', post_id).andWhere('userId', user_id).delete()
+      await Like.query().where('postId', postId).andWhere('userId', userId).delete()
 
       return await Post.query()
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', userId))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
-        .where('id', post_id)
+        .where('id', postId)
         .first()
     } else {
       return await Post.query()
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', userId))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
-        .where('id', post_id)
+        .where('id', postId)
         .first()
     }
   }
@@ -227,7 +227,7 @@ export default class PostsController {
       page = 1
     }
     return await Comment.query()
-      .where('post_id', post.id)
+      .where('postId', post.id)
       .preload('user', (profileQuery) => {
         profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
       })
@@ -244,12 +244,12 @@ export default class PostsController {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(createCommentValidator)
 
-    let post_id = request.params().id
+    let postId = request.params().id
 
     return await Comment.create({
-      user_id: auth.user.id,
+      userId: auth.user.id,
       text: payload.text,
-      post_id: post_id,
+      postId: postId,
     })
   }
 
@@ -257,19 +257,19 @@ export default class PostsController {
     assert(auth.user, 'kindly login')
     const comment = await Comment.findOrFail(request.params().id_comment)
 
-    const user_id = comment.user_id
-    const post_id = comment.post_id
+    const userId = comment.userId
+    const postId = comment.postId
 
-    if (auth.user.id === comment.user_id) {
+    if (auth.user.id === userId) {
       await comment.delete()
       return await Post.query()
         .preload('user', (profileQuery) => {
           profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
         })
-        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', user_id))
+        .withCount('likes', (query) => query.count('*').as('is_like').where('userId', userId))
         .withCount('likes', (query) => query.count('*').as('likes_count'))
         .withCount('comments', (query) => query.count('*').as('comments_count'))
-        .where('id', post_id)
+        .where('id', postId)
     } else {
       response.status(401).send('Permission denied')
       return

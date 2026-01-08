@@ -70,7 +70,7 @@ export default class UsersController {
       .withCount('followers', (query) => query.count('*').as('nb_follower'))
       .withCount('followings', (query) => query.count('*').as('nb_following'))
       .withCount('followers', (query) =>
-        query.count('*').as('is_following').where('user_follower_id', user_id)
+        query.count('*').as('is_following').where('userFollowerId', user_id)
       )
       .whereILike('firstname', '%' + search + '%')
       .orWhereILike('lastname', '%' + search + '%')
@@ -94,7 +94,7 @@ export default class UsersController {
       .withCount('followers', (query) => query.count('*').as('nb_follower'))
       .withCount('followings', (query) => query.count('*').as('nb_following'))
       .withCount('followersMe', (query) =>
-        query.count('*').as('is_following').where('user_follower_id', user_id)
+        query.count('*').as('is_following').where('userFollowerId', user_id)
       )
       .withCount('posts', (query) => query.count('*').as('nb_post'))
       .where('id', user_id)
@@ -136,7 +136,7 @@ export default class UsersController {
       .withCount('followers', (query) => query.count('*').as('nb_follower'))
       .withCount('followings', (query) => query.count('*').as('nb_following'))
       .withCount('followers', (query) =>
-        query.count('*').as('is_following').where('user_follower_id', user_id)
+        query.count('*').as('is_following').where('userFollowerId', user_id)
       )
       .where('id', request.params().id)
       .first()
@@ -181,31 +181,31 @@ export default class UsersController {
   async followUser({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(followUserValidator)
-    let user_following_id = request.params().id
-    let user_follower_id = auth.user.id
+    let userFollowingId = request.params().id
+    let userFollowerId = auth.user.id
 
     // check if post exist
-    await User.findOrFail(user_following_id)
+    await User.findOrFail(userFollowingId)
 
     let follow = await Follow.query()
-      .where('user_follower_id', user_follower_id)
-      .andWhere('user_following_id', user_following_id)
+      .where('userFollowerId', userFollowerId)
+      .andWhere('userFollowingId', userFollowingId)
 
     if (follow.length === 0 && payload.follow) {
       // create like
-      await Follow.create({ user_follower_id, user_following_id })
+      await Follow.create({ userFollowerId, userFollowingId })
 
-      return await returnUser(user_following_id, user_follower_id)
+      return await returnUser(userFollowingId, userFollowerId)
     } else if (follow.length === 1 && !payload.follow) {
       // unlike
       await Follow.query()
-        .where('user_follower_id', user_follower_id)
-        .andWhere('user_following_id', user_following_id)
+        .where('userFollowerId', userFollowerId)
+        .andWhere('userFollowingId', userFollowingId)
         .delete()
 
-      return await returnUser(user_following_id, user_follower_id)
+      return await returnUser(userFollowingId, userFollowerId)
     } else {
-      return await returnUser(user_following_id, user_follower_id)
+      return await returnUser(userFollowingId, userFollowerId)
     }
   }
 
@@ -233,7 +233,7 @@ async function returnUser(id: string, user_id: string) {
     .withCount('followers', (query) => query.count('*').as('nb_follower'))
     .withCount('followings', (query) => query.count('*').as('nb_following'))
     .withCount('followers', (query) =>
-      query.count('*').as('is_following').where('user_follower_id', user_id)
+      query.count('*').as('is_following').where('userFollowerId', user_id)
     )
     .withCount('posts', (query) => query.count('*').as('nb_post'))
     .where('id', id)

@@ -57,9 +57,7 @@ export default class PlacesController {
 
     let res: any = await Place.query()
       .select('id', 'name', 'city', 'address', 'logo')
-      .withCount('favorite', (query) =>
-        query.count('*').as('is_favorite').where('user_id', user_id)
-      )
+      .withCount('favorite', (query) => query.count('*').as('is_favorite').where('userId', user_id))
       .whereILike('city', '%' + search + '%')
       .orWhereILike('name', '%' + search + '%')
       .orWhereILike('address', '%' + search + '%')
@@ -77,14 +75,12 @@ export default class PlacesController {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     return await Place.query()
-      .join('user_places', 'places.id', 'user_places.place_id')
-      .where('user_places.user_id', user_id)
+      .join('user_places', 'places.id', 'user_places.placeId')
+      .where('user_places.userId', user_id)
       .preload('owners', (query) => {
         query.select('id', 'firstname', 'lastname') // Sélectionner seulement la colonne 'bio' pour la relation 'profile'
       })
-      .withCount('favorite', (query) =>
-        query.count('*').as('is_favorite').where('user_id', user_id)
-      )
+      .withCount('favorite', (query) => query.count('*').as('is_favorite').where('userId', user_id))
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
   }
 
@@ -92,12 +88,10 @@ export default class PlacesController {
     assert(auth.user, 'kindly login')
     let user_id = auth.user.id
     return await Place.query()
-      .withCount('favorite', (query) =>
-        query.count('*').as('is_favorite').where('user_id', user_id)
-      )
+      .withCount('favorite', (query) => query.count('*').as('is_favorite').where('userId', user_id))
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
       .whereHas('favorite', (query) => {
-        query.where('user_id', user_id) // Utilisez 'user_id' au lieu de 'userId'
+        query.where('userId', user_id)
       })
   }
   /**
@@ -112,7 +106,7 @@ export default class PlacesController {
     if (auth.user.roleId === 1) {
       return await Place.query()
         .withCount('favorite', (query) =>
-          query.count('*').as('is_favorite').where('user_id', user_id)
+          query.count('*').as('is_favorite').where('userId', user_id)
         )
         .withCount('favorite', (query) => query.count('*').as('favorite_count'))
         .where('id', request.params().id)
@@ -123,7 +117,7 @@ export default class PlacesController {
           query.select('id', 'firstname', 'lastname', 'email', 'avatar')
         })
         .withCount('favorite', (query) =>
-          query.count('*').as('is_favorite').where('user_id', user_id)
+          query.count('*').as('is_favorite').where('userId', user_id)
         )
         .withCount('favorite', (query) => query.count('*').as('favorite_count'))
         .where('id', request.params().id)
@@ -153,12 +147,12 @@ export default class PlacesController {
   }
 
   async getPlaceZones({ auth, request }: HttpContext) {
-    return await Zone.query().where('place_id', request.params().id).orderBy('created_at', 'asc')
+    return await Zone.query().where('placeId', request.params().id).orderBy('created_at', 'asc')
   }
 
   async getPlaceAllways({ auth, request }: HttpContext) {
     return await Zone.query()
-      .where('place_id', request.params().id)
+      .where('placeId', request.params().id)
       .preload('walls', (wallQuery) => {
         wallQuery.preload('ways', (wayQuery) => {
           wayQuery.preload('difficulty').preload('color')
@@ -173,7 +167,7 @@ export default class PlacesController {
 
     let payload = await request.validateUsing(updatePlaceValidator)
     let place = await Place.findOrFail(request.params().id)
-    let placeUsers = await UserPlace.query().where('place_id', request.params().id)
+    let placeUsers = await UserPlace.query().where('placeId', request.params().id)
     let usersId = placeUsers.map((userPlace) => userPlace.userId)
 
     if (typeof payload.coordinate === 'string')
@@ -255,32 +249,28 @@ export default class PlacesController {
   async favoritePlace({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
     let payload = await request.validateUsing(favoritePlaceValidator)
-    let place_id = request.params().id
-    let user_id = auth.user.id
+    let placeId = request.params().id
+    let userId = auth.user.id
 
     // check if place exist
-    await Place.findOrFail(place_id)
+    await Place.findOrFail(placeId)
 
-    let favorite = await FavoritePlace.query()
-      .where('place_id', place_id)
-      .andWhere('user_id', user_id)
+    let favorite = await FavoritePlace.query().where('placeId', placeId).andWhere('userId', userId)
 
     // create favorite
     if (favorite.length === 0 && payload.favorite) {
-      await FavoritePlace.create({ place_id, user_id })
+      await FavoritePlace.create({ placeId, userId: userId })
     }
 
     // unfavorite
     if (favorite.length === 1 && !payload.favorite) {
-      await FavoritePlace.query().where('place_id', place_id).andWhere('user_id', user_id).delete()
+      await FavoritePlace.query().where('placeId', placeId).andWhere('userId', userId).delete()
     }
 
     return await Place.query()
-      .withCount('favorite', (query) =>
-        query.count('*').as('is_favorite').where('user_id', user_id)
-      )
+      .withCount('favorite', (query) => query.count('*').as('is_favorite').where('userId', userId))
       .withCount('favorite', (query) => query.count('*').as('favorite_count'))
-      .where('id', place_id)
+      .where('id', placeId)
       .first()
   }
 

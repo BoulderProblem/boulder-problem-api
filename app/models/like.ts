@@ -8,10 +8,10 @@ export default class Like extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: userId
+  declare userId: userId
 
   @column()
-  declare post_id: postId
+  declare postId: postId
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

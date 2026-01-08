@@ -59,8 +59,8 @@ export default class WaysController {
     return await Way.query()
       .preload('difficulty')
       .preload('color')
-      .preload('notes', (query) => query.where('user_id', user_id).select('note'))
-      .preload('valid', (query) => query.where('user_id', user_id))
+      .preload('notes', (query) => query.where('userId', user_id).select('note'))
+      .preload('valid', (query) => query.where('userId', user_id))
       .withCount('comments', (query) => query.count('*').as('nbComments'))
       .withCount('avgnotes', (q) => q.avg('note').as('avg_note'))
       .where('id', request.params().id)
@@ -155,7 +155,7 @@ export default class WaysController {
       page = 1
     }
     return await CommentsWay.query()
-      .where('way_id', request.params().id)
+      .where('wayId', request.params().id)
       .preload('user', (profileQuery) => {
         profileQuery.select(['id', 'firstname', 'lastname', 'avatar'])
       })
@@ -188,22 +188,22 @@ export default class WaysController {
 
     // check if note already exists
     let noteExist = await NotesWay.query()
-      .where('way_id', request.params().id)
-      .andWhere('user_id', auth.user.id)
+      .where('wayId', request.params().id)
+      .andWhere('userId', auth.user.id)
       .first()
 
     // if exists, update note
     if (noteExist) {
       let note = await noteExist.merge({ ...payload }).save()
-      let avg = await NotesWay.query().where('way_id', request.params().id).avg('note').first()
+      let avg = await NotesWay.query().where('wayId', request.params().id).avg('note').first()
       return { note, avgNote: avg?.avgNote }
     } else {
       let note = await NotesWay.create({
-        user_id: auth.user.id,
+        userId: auth.user.id,
         note: payload.note,
-        way_id: request.params().id,
+        wayId: request.params().id,
       })
-      let avg = await NotesWay.query().where('way_id', request.params().id).avg('note').first()
+      let avg = await NotesWay.query().where('wayId', request.params().id).avg('note').first()
       return { note, avgNote: avg?.avgNote }
     }
   }
@@ -214,7 +214,7 @@ export default class WaysController {
 
     let validExist = await ValidWay.query()
       .where('wayId', request.params().id)
-      .andWhere('user_id', auth.user.id)
+      .andWhere('userId', auth.user.id)
       .first()
     if (payload.status === 'notvalid') {
       if (validExist) {
@@ -225,7 +225,7 @@ export default class WaysController {
         return await validExist.merge({ ...payload }).save()
       } else {
         return await ValidWay.create({
-          user_id: auth.user.id,
+          userId: auth.user.id,
           status: payload.status,
           wayId: request.params().id,
         })

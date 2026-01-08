@@ -8,10 +8,10 @@ export default class FavoritePlace extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: userId
+  declare userId: userId
 
   @column()
-  declare place_id: placeId
+  declare placeId: placeId
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

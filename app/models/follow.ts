@@ -7,10 +7,10 @@ export default class Follow extends BaseModel {
   declare id: number
 
   @column()
-  declare user_follower_id: userId
+  declare userFollowerId: userId
 
   @column()
-  declare user_following_id: userId
+  declare userFollowingId: userId
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

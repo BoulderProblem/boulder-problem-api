@@ -7,7 +7,7 @@ export default class NotesWay extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
-  declare user_id: userId
+  declare userId: userId
 
   @column()
   declare wayId: wayId

@@ -32,16 +32,16 @@ export default class WallsController {
 
   async getWallWays({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
-    let user_id = auth.user.id
+    let userId = auth.user.id
 
     let way = await Way.query()
       .preload('difficulty')
       .preload('color')
-      .preload('notes', (query) => query.where('user_id', user_id).select('note'))
-      .preload('valid', (query) => query.where('user_id', user_id))
+      .preload('notes', (query) => query.where('userId', userId).select('note'))
+      .preload('valid', (query) => query.where('userId', userId))
       .withCount('comments', (query) => query.count('*').as('nbComments'))
       .withCount('avgnotes', (q) => q.avg('note').as('avg_note'))
-      .where('wall_id', request.params().id)
+      .where('wallId', request.params().id)
       .whereNull('delete_at')
       .orderBy('created_at', 'asc')
     return way

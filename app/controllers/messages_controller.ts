@@ -19,9 +19,9 @@ export default class MessagesController {
     if (payload.userIds.includes(user_id)) {
       const existing = await db
         .from('users_conversations as uc')
-        .select('uc.conversation_id')
-        .whereIn('uc.user_id', payload.userIds)
-        .groupBy('uc.conversation_id')
+        .select('uc.conversationId')
+        .whereIn('uc.userId', payload.userIds)
+        .groupBy('uc.conversationId')
         // Vérifie que tous les userIds sont présents
         .havingRaw('COUNT(DISTINCT uc.user_id) = ?', [payload.userIds.length])
         // Vérifie qu'il n'y a pas d'autres users dans la même conversation
@@ -79,7 +79,7 @@ export default class MessagesController {
             query
               .count('*')
               .as('unread_messages')
-              .where('sender_id', '!=', user_id)
+              .where('senderId', '!=', user_id)
               .andWhereRaw(
                 `messages.created_at > COALESCE(
             (SELECT last_read_at
@@ -116,7 +116,7 @@ export default class MessagesController {
         query
           .count('*')
           .as('unread_messages')
-          .where('sender_id', '!=', user_id)
+          .where('senderId', '!=', user_id)
           .andWhereRaw(
             `messages.created_at > COALESCE(
             (SELECT last_read_at
@@ -130,7 +130,7 @@ export default class MessagesController {
         query.where('userId', user_id)
       })
       .whereHas('usersConversation', (query) => {
-        query.where('user_id', user_id) // Vérifier si l'utilisateur est dans la conversation avec l'utilisateur connecté
+        query.where('userId', user_id) // Vérifier si l'utilisateur est dans la conversation avec l'utilisateur connecté
       })
   }
 
@@ -140,8 +140,8 @@ export default class MessagesController {
     let convId = request.params().id
 
     await UsersConversation.query()
-      .where('conversation_id', convId)
-      .andWhere('user_id', user_id)
+      .where('conversationId', convId)
+      .andWhere('userId', user_id)
       .firstOrFail()
 
     return await Conversation.query()
@@ -182,8 +182,8 @@ export default class MessagesController {
     let convId = request.params().id
 
     let userConv = await UsersConversation.query()
-      .where('conversation_id', convId)
-      .andWhere('user_id', user_id)
+      .where('conversationId', convId)
+      .andWhere('userId', user_id)
       .firstOrFail()
 
     userConv.lastReadAt = DateTime.local()
@@ -192,7 +192,7 @@ export default class MessagesController {
   }
 
   async store({ request }: HttpContext) {
-    const data = request.only(['sender_id', 'ciphertext', 'nonce', 'conversationId', 'key_version'])
+    const data = request.only(['senderId', 'ciphertext', 'nonce', 'conversationId', 'key_version'])
 
     const message = await Message.create(data)
     // update conv
@@ -209,8 +209,8 @@ export default class MessagesController {
     let messages: any[] = []
 
     await UsersConversation.query()
-      .where('conversation_id', convId)
-      .andWhere('user_id', user_id)
+      .where('conversationId', convId)
+      .andWhere('userId', user_id)
       .firstOrFail()
 
     if (convId) {

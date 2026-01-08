@@ -9,7 +9,7 @@ export default class ValidWay extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: userId
+  declare userId: userId
 
   @column()
   declare wayId: wayId

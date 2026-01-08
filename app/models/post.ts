@@ -73,13 +73,13 @@ export default class Post extends BaseModel {
   declare is_like: boolean
 
   @hasMany(() => Like, {
-    foreignKey: 'post_id',
+    foreignKey: 'postId',
     serializeAs: null,
   })
   declare likes: HasMany<typeof Like>
 
   @hasMany(() => Comment, {
-    foreignKey: 'post_id',
+    foreignKey: 'postId',
   })
   declare comments: HasMany<typeof Comment>
 

@@ -110,7 +110,7 @@ export default class AuthController {
         const reset = await ResetPassword.findOrFail(oldReset[0].id)
         await reset.delete()
       }
-      await ResetPassword.create({ user_id: user[0].id, code, email: payload.email })
+      await ResetPassword.create({ userId: user[0].id, code, email: payload.email })
     }
 
     return {
@@ -146,7 +146,7 @@ export default class AuthController {
           deleteRequest(reset[0].id)
 
           // change encrypt key for user key backup
-          const backup = await KeyBackups.query().where('user_id', user[0].id).first()
+          const backup = await KeyBackups.query().where('userId', user[0].id).first()
           if (backup) {
             let key = {
               ciphertext: backup.ciphertext_srv,
@@ -161,7 +161,7 @@ export default class AuthController {
             // re-encrypt with user password
             const newKey = await encryptPrivateKey(userPriv, payload.password)
 
-            await KeyBackups.query().where('user_id', user[0].id).update({
+            await KeyBackups.query().where('userId', user[0].id).update({
               ciphertext: newKey.ciphertext,
               nonce: newKey.nonce,
               salt: newKey.salt,
@@ -218,7 +218,7 @@ export default class AuthController {
 
   async showPrivateKey({ auth }: HttpContext) {
     const backup = await KeyBackups.query()
-      .where('user_id', auth.user!.id)
+      .where('userId', auth.user!.id)
       .select('ciphertext', 'nonce', 'salt')
       .first()
 

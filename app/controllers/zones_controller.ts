@@ -71,7 +71,7 @@ export default class ZonesController {
    * @responseBody 401 - {"errors": [{"message": "Unauthorized access"}]}
    */
   async getWallsZone({ request }: HttpContext) {
-    return await Wall.query().where('zone_id', request.params().id).orderBy('created_at', 'asc')
+    return await Wall.query().where('zoneId', request.params().id).orderBy('created_at', 'asc')
   }
 
   /**

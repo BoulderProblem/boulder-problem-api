@@ -1,9 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import { Opaque } from '@adonisjs/core/types/helpers'
-import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import FavoritePlace from './favorite_place.js'
-import User, { type userId } from './user.js'
+import User from './user.js'
 
 export type placeId = Opaque<'placeId', number>
 
@@ -32,7 +32,7 @@ export default class Place extends BaseModel {
   declare is_favorite: boolean
 
   @hasMany(() => FavoritePlace, {
-    foreignKey: 'place_id',
+    foreignKey: 'placeId',
     serializeAs: null,
   })
   declare favorite: HasMany<typeof FavoritePlace>
@@ -40,9 +40,9 @@ export default class Place extends BaseModel {
   @manyToMany(() => User, {
     pivotTable: 'user_places',
     localKey: 'id', // clé primaire dans users
-    pivotForeignKey: 'place_id',
+    pivotForeignKey: 'placeId',
     relatedKey: 'id', // clé primaire dans contests
-    pivotRelatedForeignKey: 'user_id',
+    pivotRelatedForeignKey: 'userId',
   })
   declare owners: ManyToMany<typeof User>
 

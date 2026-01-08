@@ -72,19 +72,19 @@ export default class User extends compose(BaseModel, AuthFinder) {
   }
 
   @hasMany(() => Follow, {
-    foreignKey: 'user_following_id',
+    foreignKey: 'userFollowingId',
     serializeAs: null,
   })
   declare followers: HasMany<typeof Follow>
 
   @hasMany(() => Follow, {
-    foreignKey: 'user_following_id',
+    foreignKey: 'userFollowingId',
     serializeAs: null,
   })
   declare followersMe: HasMany<typeof Follow>
 
   @hasMany(() => Follow, {
-    foreignKey: 'user_follower_id',
+    foreignKey: 'userFollowingId',
     serializeAs: null,
   })
   declare followings: HasMany<typeof Follow>

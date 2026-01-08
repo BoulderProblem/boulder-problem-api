@@ -12,26 +12,26 @@ export default class FeedController {
    */
   async getFeed({ auth, request }: HttpContext) {
     assert(auth.user, 'kindly login')
-    let user_id = auth.user.id
+    let userId = auth.user.id
     let page = request.only(['page']).page
     if (!page) {
       page = 1
     }
 
     // get followers
-    const followingUsers = await Follow.query().where('user_follower_id', user_id)
+    const followingUsers = await Follow.query().where('userFollowerId', userId)
 
-    let following_id = followingUsers.map((f: any) => f.user_following_id)
-    following_id.push(user_id)
+    let following_id = followingUsers.map((f: any) => f.userFollowingId)
+    following_id.push(userId)
 
     let posts = await Post.query()
       .preload('user', (profileQuery) => {
         profileQuery.select(['firstname', 'lastname', 'avatar'])
       })
-      .withCount('likes', (query) => query.count('*').as('is_like').where('user_id', user_id))
+      .withCount('likes', (query) => query.count('*').as('is_like').where('userId', userId))
       .withCount('likes', (query) => query.count('*').as('likes_count'))
       .withCount('comments', (query) => query.count('*').as('comments_count'))
-      .whereIn('user_id', following_id)
+      .whereIn('userId', following_id)
 
     const scoredPosts = posts
       .map((post) => ({
@@ -60,7 +60,7 @@ function transformPost(post: any) {
   // Accès aux attributs du modèle Lucid
   const {
     id,
-    user_id,
+    userId,
     title,
     image,
     text,
@@ -78,7 +78,7 @@ function transformPost(post: any) {
   // Format transformé que l'on retourne
   return {
     id,
-    userId: user_id,
+    userId,
     title,
     image,
     text,

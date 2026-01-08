@@ -8,9 +8,9 @@ export default class ResetPassword extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: userId
+  declare userId: userId
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
   @column()

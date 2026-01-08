@@ -37,6 +37,7 @@ export default class AuthController {
       ...token.toJSON(),
       pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
       userId: user.id,
+      firstLogin: true,
     }
   }
 
@@ -225,8 +226,7 @@ export default class AuthController {
 
   async firebaseLogin({ request, response }: HttpContext) {
     const idToken = request.header('Authorization')?.replace('Bearer ', '')
-    console.log(idToken)
-
+    let firstLogin = false
     if (!idToken) {
       return response.unauthorized({ error: 'Token manquant' })
     }
@@ -248,6 +248,7 @@ export default class AuthController {
       let user = await User.query().where('email', decoded.email).first()
 
       if (!user) {
+        firstLogin = true
         // Création du user dans Adonis
         let avatar
         if (decoded.picture) {
@@ -277,6 +278,7 @@ export default class AuthController {
         ...token.toJSON(),
         pubSrvKey: env.get('SERVER_MASTER_PUBLIC_KEY'),
         userId: user.id,
+        firstLogin,
       }
     } catch (error) {
       console.log(error)

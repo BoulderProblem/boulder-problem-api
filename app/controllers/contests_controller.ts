@@ -154,7 +154,7 @@ export default class ContestsController {
     // Check if the contest exists
     const scores = await db
       .from('users_contests as uc')
-      .select('uc.contestId', 'uc.userId', 'u.firstname', 'u.lastname', 'u.avatar')
+      .select('uc.contest_id', 'uc.user_id', 'u.firstname', 'u.lastname', 'u.avatar')
       .sum(
         db
           .raw(
@@ -170,15 +170,15 @@ export default class ContestsController {
           .wrap('(', ')'),
         'score'
       )
-      .leftJoin('valid_ways as vw', 'vw.userId', 'uc.userId')
-      .leftJoin('users as u', 'u.id', 'uc.userId')
+      .leftJoin('valid_ways as vw', 'vw.user_id', 'uc.user_id')
+      .leftJoin('users as u', 'u.id', 'uc.user_id')
       .leftJoin('ways_contests as wc', function () {
-        this.on('wc.contestId', '=', 'uc.contestId').andOn('wc.wayId', '=', 'vw.wayId')
+        this.on('wc.contest_id', '=', 'uc.contest_id').andOn('wc.way_id', '=', 'vw.way_id')
       })
-      .leftJoin('contests as c', 'c.id', 'uc.contestId')
-      .where('uc.contestId', contestId)
-      .andWhereBetween('vw.updated_at', [db.ref('c.startDate'), db.ref('c.endDate')])
-      .groupBy('uc.contestId', 'uc.userId', 'u.firstname', 'u.lastname', 'u.avatar')
+      .leftJoin('contests as c', 'c.id', 'uc.contest_id')
+      .where('uc.contest_id', contestId)
+      .andWhereBetween('vw.updated_at', [db.ref('c.start_date'), db.ref('c.end_date')])
+      .groupBy('uc.contest_id', 'uc.user_id', 'u.firstname', 'u.lastname', 'u.avatar')
       .orderBy('score', 'desc')
 
     return scores
@@ -209,8 +209,8 @@ export default class ContestsController {
           zoneQuery.preload('place')
         })
       })
-      .join('ways_contests', 'ways.id', 'ways_contests.wayId')
-      .where('ways_contests.contestId', contestId)
+      .join('ways_contests', 'ways.id', 'ways_contests.way_id')
+      .where('ways_contests.contest_id', contestId)
       .select('ways.*') // important pour éviter les colonnes en double
 
     return ways
@@ -234,8 +234,8 @@ export default class ContestsController {
     // Add the way to the contest
     if (ways_contest.length === 0) {
       await WaysContest.create({
-        contest_id: contestId,
-        way_id: wayId,
+        contestId: contestId,
+        wayId: wayId,
       })
     }
     return { success: true }

@@ -8,10 +8,10 @@ export default class WaysContest extends BaseModel {
   declare id: number
 
   @column()
-  declare way_id: wayId
+  declare wayId: wayId
 
   @column()
-  declare contest_id: contestId
+  declare contestId: contestId
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

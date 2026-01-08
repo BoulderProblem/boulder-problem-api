@@ -9,8 +9,8 @@ export default class StatsController {
    */
   async getStats({}: HttpContext) {
     let res: any = {}
-    res.users = (await db.from('users').countDistinct('id').where('roleId', 1))[0].count
-    res.gerants = (await db.from('users').countDistinct('id').where('roleId', 2))[0].count
+    res.users = (await db.from('users').countDistinct('id').where('role_id', 1))[0].count
+    res.gerants = (await db.from('users').countDistinct('id').where('role_id', 2))[0].count
     res.posts = (await db.from('posts').countDistinct('id'))[0].count
     let graph_users = (
       await db.rawQuery(

@@ -40,9 +40,9 @@ export default class Place extends BaseModel {
   @manyToMany(() => User, {
     pivotTable: 'user_places',
     localKey: 'id', // clé primaire dans users
-    pivotForeignKey: 'placeId',
+    pivotForeignKey: 'place_id',
     relatedKey: 'id', // clé primaire dans contests
-    pivotRelatedForeignKey: 'userId',
+    pivotRelatedForeignKey: 'user_id',
   })
   declare owners: ManyToMany<typeof User>
 

@@ -6,8 +6,8 @@ export default class extends BaseSchema {
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
       table.text('location')
-      table.date('start_time')
-      table.date('end_time')
+      table.timestamp('start_time')
+      table.timestamp('end_time')
       table.integer('activity')
       table.integer('feeling')
       table.string('private_note')

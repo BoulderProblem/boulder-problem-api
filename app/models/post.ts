@@ -31,10 +31,10 @@ export default class Post extends BaseModel {
   declare session: number
 
   @column()
-  declare startTime: Date
+  declare startTime: DateTime
 
   @column()
-  declare endTime: Date
+  declare endTime: DateTime
 
   @column()
   declare activity: number

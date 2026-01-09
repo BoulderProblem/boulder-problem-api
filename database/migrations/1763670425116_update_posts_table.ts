@@ -6,6 +6,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
       table.text('location')
+      table.integer('session')
       table.timestamp('start_time')
       table.timestamp('end_time')
       table.integer('activity')
@@ -19,6 +20,7 @@ export default class extends BaseSchema {
   async down() {
     this.schema.alterTable(this.tableName, (table) => {
       table.dropColumn('location')
+      table.dropColumn('session')
       table.dropColumn('start_time')
       table.dropColumn('end_time')
       table.dropColumn('activity')

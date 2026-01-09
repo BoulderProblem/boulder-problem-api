@@ -31,6 +31,7 @@ export const createPostValidator = vine.compile(
     privateNote: vine.string().optional(),
     materials: vine.number().optional(),
     visibility: vine.number().optional(),
+    session: vine.number().optional(),
   })
 )
 
@@ -42,13 +43,22 @@ export const updatePostValidator = vine.compile(
     title: vine.string().optional(),
     text: vine.string().optional(),
     location: vine.string().optional(),
-    startTime: vine.date().optional(),
-    endTime: vine.date().optional(),
+    startTime: vine
+      .date({
+        formats: ['iso8601'],
+      })
+      .optional(),
+    endTime: vine
+      .date({
+        formats: ['iso8601'],
+      })
+      .optional(),
     activity: vine.number().optional(),
     feeling: vine.number().optional(),
     privateNote: vine.string().optional(),
     materials: vine.number().optional(),
     visibility: vine.number().optional(),
+    session: vine.number().optional(),
   })
 )
 

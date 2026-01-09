@@ -60,13 +60,14 @@ export default class PostsController {
       image: imageids,
       userId: auth.user.id,
       location: payload.location,
-      startTime: payload.startTime,
-      endTime: payload.endTime,
+      startTime: payload.startTime ? DateTime.fromJSDate(payload.startTime) : undefined,
+      endTime: payload.endTime ? DateTime.fromJSDate(payload.endTime) : undefined,
       activity: payload.activity,
       feeling: payload.feeling,
       privateNote: payload.privateNote,
       materials: payload.materials,
       visibility: payload.visibility,
+      session: payload.session,
     })
 
     return post
@@ -84,7 +85,16 @@ export default class PostsController {
     let post = await Post.findOrFail(request.params().id)
 
     if (post.userId === auth.user.id) {
-      await post.merge({ ...payload, ...{ updatedAt: DateTime.local() } }).save()
+      await post
+        .merge({
+          ...payload,
+          ...{
+            updatedAt: DateTime.local(),
+            startTime: payload.startTime ? DateTime.fromJSDate(payload.startTime) : undefined,
+            endTime: payload.endTime ? DateTime.fromJSDate(payload.endTime) : undefined,
+          },
+        })
+        .save()
 
       return await Post.findOrFail(request.params().id)
     } else {

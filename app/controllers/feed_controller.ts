@@ -70,6 +70,13 @@ function transformPost(post: any) {
     comments_count,
     is_like,
     score,
+    startTime,
+    endTime,
+    activity,
+    feeling,
+    privateNote,
+    materials,
+    visibility,
   } = post.$attributes
 
   // Si l'on veut aussi intégrer les données de l'utilisateur (comme le prénom et l'avatar)
@@ -95,6 +102,13 @@ function transformPost(post: any) {
       email: user.email,
       avatar: user.avatar,
     },
+    startTime,
+    endTime,
+    activity,
+    feeling,
+    privateNote,
+    materials,
+    visibility,
   }
 }
 

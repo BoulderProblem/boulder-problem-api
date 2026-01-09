@@ -16,8 +16,16 @@ export const createPostValidator = vine.compile(
       .optional(),
     text: vine.string(),
     location: vine.string().optional(),
-    startTime: vine.date().optional(),
-    endTime: vine.date().optional(),
+    startTime: vine
+      .date({
+        formats: ['iso8601'],
+      })
+      .optional(),
+    endTime: vine
+      .date({
+        formats: ['iso8601'],
+      })
+      .optional(),
     activity: vine.number().optional(),
     feeling: vine.number().optional(),
     privateNote: vine.string().optional(),
